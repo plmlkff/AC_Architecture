@@ -114,9 +114,6 @@ class ACCopm:
     def load_IP(self):
         self.alu.right_bus = self.IP
 
-    def load_AR(self):
-        self.alu.right_bus = self.AR
-
     def CR_addr_to_bus(self):
         self.alu.right_bus = self.CR.address
 
@@ -208,14 +205,14 @@ class ControlUnit:
             # call (use with direct load by default)
             MicroCommand(False, [MicroInstruction.LOAD_IP, MicroInstruction.SUM,
                                  MicroInstruction.INC, MicroInstruction.LATCH_BR]),  # 36: IP + 1 -> BR
-            MicroCommand(False, [MicroInstruction.LOAD_AR, MicroInstruction.SUM,
+            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
                                  MicroInstruction.LATCH_IP]),  # 37: DR -> IP
             MicroCommand(False, [MicroInstruction.LOAD_SP, MicroInstruction.INV_L,
                                  MicroInstruction.SUM, MicroInstruction.LATCH_SP,
                                  MicroInstruction.LATCH_AR]),  # 38: SP + ~0 -> SP, AR
-            MicroCommand(False, [MicroInstruction.LOAD_AR, MicroInstruction.SUM,
+            MicroCommand(False, [MicroInstruction.LOAD_BR, MicroInstruction.SUM,
                                  MicroInstruction.LATCH_DR, MicroInstruction.WR_MEM]),  # 39: BR -> DR -> MEM(AR)
-            MicroCommand(True, [MicroInstruction.JUMP], self.POST_EXECUTION_INDEX),  # 40: Post-exec -> mIP
+            MicroCommand(True, [MicroInstruction.JUMP], 0),  # 40: 0 -> mIP
             # ret
             MicroCommand(False, [MicroInstruction.LOAD_SP, MicroInstruction.SUM,
                                  MicroInstruction.LATCH_AR]),  # 41: SP -> AR
@@ -224,7 +221,7 @@ class ControlUnit:
                                  MicroInstruction.LATCH_IP]),  # 43: DR -> IP
             MicroCommand(False, [MicroInstruction.LOAD_SP,  MicroInstruction.SUM,
                                  MicroInstruction.INC, MicroInstruction.LATCH_SP]),  # 44: SP + 1 -> SP
-            MicroCommand(True, [MicroInstruction.JUMP], self.POST_EXECUTION_INDEX),  # 45: Post-exec -> mIP
+            MicroCommand(True, [MicroInstruction.JUMP], 0),  # 45: 0 -> mIP
             # cmp
             MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.LOAD_AC,
                                  MicroInstruction.INV_R, MicroInstruction.SUM,
@@ -330,8 +327,6 @@ class ControlUnit:
                 self.comp.load_CR()
             if MicroInstruction.LOAD_IP in mc.signals:
                 self.comp.load_IP()
-            if MicroInstruction.LOAD_AR in mc.signals:
-                self.comp.load_AR()
             if MicroInstruction.CR_ADDR_TO_BUS in mc.signals:
                 self.comp.CR_addr_to_bus()
             if MicroInstruction.RD_MEM in mc.signals:

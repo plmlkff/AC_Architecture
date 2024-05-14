@@ -96,33 +96,32 @@ class MicroInstruction(Enum):
     LOAD_SP = 10
     LOAD_CR = 11
     LOAD_IP = 12
-    LOAD_AR = 13
-    CR_ADDR_TO_BUS = 14  # Выставляет адрес команды из CR на правый вход АЛУ
+    CR_ADDR_TO_BUS = 13  # Выставляет адрес команды из CR на правый вход АЛУ
 
     # Чтение данных из памяти по AR
-    WR_MEM = 15
-    RD_MEM = 16
+    WR_MEM = 14
+    RD_MEM = 15
 
     # Управляющие сигналы АЛУ
-    INV_L = 17  # Invert left
-    INV_R = 18  # Invert right
-    INC = 19  # Increment output
-    AND = 20  # Binary AND (default do sum)
-    SUM = 21  # Binary AND (default do sum)
+    INV_L = 16  # Invert left
+    INV_R = 17  # Invert right
+    INC = 18  # Increment output
+    AND = 19  # Binary AND (default do sum)
+    SUM = 20  # Binary AND (default do sum)
 
     # Сигналы проверки флагов
-    SET_NZ = 22  # Set sign and zero flags
+    SET_NZ = 21  # Set sign and zero flags
 
     # Сигналы управляющих микрокоманд
-    CHCK_ADDR_TYPE = 23  # Проверка типа адресации
-    JUMP = 24  # Переход по адресу внутри памяти микрокоманд
-    JUMP_TO_CR_OPCODE = 25  # Перейти на опкод инструкции
-    JUMP_IF = 26  # Перейти если
-    CHECK_Z = 27 # Проверить Z
-    CHECK_N = 28 # Проверить N
-    CHECK_nZ = 29 # Проверить не Z
-    CHECK_nN = 30 # Проверить не N
-    HLT = 31 # Завершение работы машины
+    CHCK_ADDR_TYPE = 22  # Проверка типа адресации
+    JUMP = 23  # Переход по адресу внутри памяти микрокоманд
+    JUMP_TO_CR_OPCODE = 24  # Перейти на опкод инструкции
+    JUMP_IF = 25  # Перейти если
+    CHECK_Z = 26  # Проверить Z
+    CHECK_N = 27  # Проверить N
+    CHECK_nZ = 28  # Проверить не Z
+    CHECK_nN = 39  # Проверить не N
+    HLT = 30  # Завершение работы машины
 
 
 class MicroCommand:
