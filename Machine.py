@@ -87,6 +87,7 @@ class ACCopm:
     def latch_AR(self):
         if isinstance(self.alu.out_bus, Command): self.alu.out_bus = self.alu.out_bus.op_code.value
         self.AR = self.alu.out_bus
+        if self.AR > 1023: raise Exception("AR out of bounds")
 
     def rd_mem(self):
         self.mem_bus = self.mem[self.AR]
@@ -362,7 +363,11 @@ class ControlUnit:
             if MicroInstruction.LATCH_IP in mc.signals:
                 self.comp.latch_IP()
             if MicroInstruction.LATCH_AR in mc.signals:
-                self.comp.latch_AR()
+                try:
+                    self.comp.latch_AR()
+                except Exception as e:
+                    print(e)
+                    return False
             if MicroInstruction.WR_MEM in mc.signals:
                 self.comp.wr_mem()
         self.mIP += 1
@@ -381,4 +386,4 @@ if __name__ == "__main__":
     comp.mem = json.load(open("output.txt", 'r'), object_hook=dictToCommand)
     while cu.process_mc():
         continue
-    print(123)
+print(123)
