@@ -1,28 +1,29 @@
 from enum import Enum
 from dataclasses import dataclass
 import json
+from typing import cast
 
 
 class OpCode(Enum):
-    ADD = 0  # +
-    SUB = 1  # -
+    NOPE = 63
+    ADD = 20  # +
+    SUB = 22  # -
 
-    LD = 2  # Load from memory
-    WR = 3  # Write to memory
-    PUSH = 4  # Put value on the stack
-    POP = 5  # Take value from the stack
+    LD = 24  # Load from memory
+    WR = 26  # Write to memory
+    PUSH = 28  # Put value on the stack
+    POP = 31  # Take value from the stack
 
-    CALL = 6  # Call function
-    RET = 7  # Return from function
-    CMP = 8  # Compare AC with given value
-    JMP = 9  # Jump to address
-    JZ = 10  # Jump if zero
-    JE = 11  # Jump if equals
-    JNE = 12  # Jump if not equals
-    JG = 13  # Jump if greater
-    JL = 14  # Jump if lower
+    CALL = 36  # Call function
+    RET = 41  # Return from function
+    CMP = 46  # Compare AC with given value
+    JMP = 48  # Jump to address
+    JE = 50  # Jump if equals
+    JNE = 53  # Jump if not equals
+    JG = 56  # Jump if greater
+    JL = 59  # Jump if lower
 
-    HLT = 15
+    HLT = 62
 
     def __str__(self):
         return self.name
@@ -30,40 +31,30 @@ class OpCode(Enum):
 
 class AddressingType(Enum):
     ABSOLUTE_STRAIGHT = 0
-    ABSOLUTE_RELATIVE = 1
+    STRAIGHT_RELATIVE = 1
     INDIRECT_STRAIGHT = 2
-    INDIRECT_RELATIVE = 3
+    STACK_RELATIVE = 3
     DIRECT_LOAD = 4
+    NO_ADDRESS = 5
 
     def __str__(self):
         return self.name
-
 
 
 @dataclass
 class Command:
     name: str
     op_code: OpCode
-    addressing_type: AddressingType = None
-    is_start: bool = False
-    address: int = None
+    addressing_type: AddressingType
+    is_start: bool
+    address: int
 
     def __init__(self, name, opcode):
         self.name = name
         self.op_code = opcode
-
-
-def deserialize(filename: str):
-    with open(filename, "r") as file:
-        json_obj = json.load(file)
-    stack = []
-    for value in json_obj:
-        if isinstance(value, int):
-            stack.append(value)
-        elif isinstance(value, dict):
-            command = Command(value["name"], OpCode[value["op_code"]])
-            stack.append(command)
-    return stack
+        self.addressing_type = AddressingType.NO_ADDRESS
+        self.is_start = False
+        self.address = 0
 
 
 class CommandEncoder(json.JSONEncoder):
@@ -77,7 +68,16 @@ class CommandEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-class MicroInstructions(Enum):
+def dictToCommand(dict):
+    if isinstance(dict, int): return dict
+    command = Command(dict['name'], OpCode[dict['op_code']])
+    command.addressing_type = AddressingType[dict['addressing_type']]
+    command.address = int(dict['address'])
+    command.is_start = bool(dict['is_start'])
+    return command
+
+
+class MicroInstruction(Enum):
     # Сигналы, защелкивающие значения в регистрах с шины
     LATCH_AC = 0
     LATCH_BR = 1
@@ -96,33 +96,63 @@ class MicroInstructions(Enum):
     LOAD_SP = 10
     LOAD_CR = 11
     LOAD_IP = 12
-    LOAD_ZR = 13
+    LOAD_AR = 13
+    CR_ADDR_TO_BUS = 14  # Выставляет адрес команды из CR на правый вход АЛУ
 
     # Чтение данных из памяти по AR
-    WR_MEM = 14
-    RD_MEM = 15
+    WR_MEM = 15
+    RD_MEM = 16
 
     # Управляющие сигналы АЛУ
-    INV_L = 16  # Invert left
-    INV_R = 17  # Invert right
-    INC = 18  # Increment output
-    AND = 19  # Binary AND (default do sum)
+    INV_L = 17  # Invert left
+    INV_R = 18  # Invert right
+    INC = 19  # Increment output
+    AND = 20  # Binary AND (default do sum)
+    SUM = 21  # Binary AND (default do sum)
 
     # Сигналы проверки флагов
-    SET_NZ = 20  # Set sign and zero flags
-    SET_V = 21  # Set overflow
-    SET_C = 22  # Set carry flag
+    SET_NZ = 22  # Set sign and zero flags
+
+    # Сигналы управляющих микрокоманд
+    CHCK_ADDR_TYPE = 23  # Проверка типа адресации
+    JUMP = 24  # Переход по адресу внутри памяти микрокоманд
+    JUMP_TO_CR_OPCODE = 25  # Перейти на опкод инструкции
+    JUMP_IF = 26  # Перейти если
+    CHECK_Z = 27 # Проверить Z
+    CHECK_N = 28 # Проверить N
+    CHECK_nZ = 29 # Проверить не Z
+    CHECK_nN = 30 # Проверить не N
+    HLT = 31 # Завершение работы машины
 
 
-@dataclass
 class MicroCommand:
-    signals: list[MicroInstructions]
+    is_control: bool
+    signals: list[MicroInstruction]
+    expression: bool
+    value: int
+
+    def __init__(self, is_control, signals, value=0, expression=False):
+        self.is_control = is_control
+        self.signals = signals
+        self.value = value
+        self.expression = expression
 
 
 commands = {
+    'nope': OpCode.NOPE,
     'add': OpCode.ADD,
+    'sub': OpCode.SUB,
     'ld': OpCode.LD,
+    'wr': OpCode.WR,
+    'push': OpCode.PUSH,
+    'pop': OpCode.POP,
+    'call': OpCode.CALL,
+    'ret': OpCode.RET,
+    'cmp': OpCode.CMP,
+    'jmp': OpCode.JMP,
+    'je': OpCode.JE,
+    'jne': OpCode.JNE,
+    'jg': OpCode.JG,
+    'jl': OpCode.JL,
     'hlt': OpCode.HLT
 }
-
-

@@ -14,7 +14,7 @@ E    -> to stderr
 
 mrk_pattern = re.compile(r'^[a-zA-Z]+:')
 mnc_pattern = re.compile(r'^[a-zA-Z]+$')
-addr_pattern = re.compile(r'^[\[\+\-#]?\d+\]?$')
+addr_pattern = re.compile(r'^[\[\+\-#]?[\+\-]?\d+\]?$')
 start_address = 0
 
 
@@ -40,7 +40,7 @@ def parse_addressing_type(word: str):
         return AddressingType.DIRECT_LOAD
     else:
         if word[0] == '+' or word[0] == '-':
-            return AddressingType.ABSOLUTE_RELATIVE
+            return AddressingType.STRAIGHT_RELATIVE
         return AddressingType.ABSOLUTE_STRAIGHT
 
 
@@ -48,16 +48,25 @@ def parse_addressing_type(word: str):
 def lexemes_to_commands(lexemes: list[Lexeme]):
     memory_stack: list[int | Command] = [0] * 1024
     is_address_changed = False
+    is_word_value = False
     address = 0
     for lexeme in lexemes:
+        if is_word_value:
+            memory_stack[address] = int(re.findall(r'[+-]?\d+', lexeme.word)[0])
+            address += 1
+            is_word_value = False
+            continue
         if is_address_changed:
             address = int(re.findall(r'[+-]?\d+', lexeme.word)[0])
             is_address_changed = False
             continue
         if lexeme.word == 'org':
             is_address_changed = True
+        if lexeme.word == 'word':
+            is_word_value = True
         elif lexeme.type == MachineState.MNC and lexeme.word in commands:
             memory_stack[address] = Command(lexeme.word, commands[lexeme.word])
+            memory_stack[address].addressing_type = AddressingType.NO_ADDRESS
             if address == start_address:
                 memory_stack[address].is_start = True
             address += 1
@@ -98,23 +107,23 @@ def get_expected_lexeme_name(state: MachineState):
         return 'mark or mnemonic'
 
 
-def state_S(word):
+def state_S(word: str):
     if len(mnc_pattern.findall(word)) != 0:
-        return Lexeme(word, MachineState.MNC)
+        return Lexeme(word.lower(), MachineState.MNC)
     return Lexeme(word, MachineState.E)
 
 
-def state_MNC(word):
+def state_MNC(word: str):
     if len(addr_pattern.findall(word)) != 0:
         return Lexeme(word, MachineState.ADDR)
     if len(mnc_pattern.findall(word)) != 0:
-        return Lexeme(word, MachineState.MNC)
+        return Lexeme(word.lower(), MachineState.MNC)
     return Lexeme(word, MachineState.E)
 
 
-def state_ADDR(word):
+def state_ADDR(word: str):
     if len(mnc_pattern.findall(word)) != 0:
-        return Lexeme(word, MachineState.MNC)
+        return Lexeme(word.lower(), MachineState.MNC)
     return Lexeme(word, MachineState.E)
 
 
