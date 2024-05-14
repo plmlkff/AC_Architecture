@@ -152,7 +152,7 @@ class ControlUnit:
             # Indirect straight
             MicroCommand(False, [MicroInstruction.CR_ADDR_TO_BUS, MicroInstruction.SUM,
                                  MicroInstruction.LATCH_AR]),  # 9: CR(address) -> AR
-            MicroCommand(False, [MicroInstruction.RD_MEM, MicroInstruction.LATCH_AR]),  # 10: MEM(AR) -> DR
+            MicroCommand(False, [MicroInstruction.RD_MEM, MicroInstruction.LATCH_DR]),  # 10: MEM(AR) -> DR
             MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
                                  MicroInstruction.LATCH_AR]),  # 11: DR -> AR
             MicroCommand(True, [MicroInstruction.JUMP], self.OPERAND_FETCH_INDEX),  # 12: To operand fetch
@@ -381,3 +381,4 @@ if __name__ == "__main__":
     comp.mem = json.load(open("output.txt", 'r'), object_hook=dictToCommand)
     while cu.process_mc():
         continue
+    print(123)
