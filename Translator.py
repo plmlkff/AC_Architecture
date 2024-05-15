@@ -76,7 +76,7 @@ def lexemes_to_commands(lexemes: list[Lexeme]):
     return memory_stack
 
 
-def replace_marks(lines: list[str]):
+def replace_marks_and_chars(lines: list[str]):
     global start_address
     address = 0
     for i in range(len(lines)):
@@ -84,6 +84,9 @@ def replace_marks(lines: list[str]):
     lines = '\n'.join(lines)
     lines = lines.replace(':\n', ':')
     for line in lines.split('\n'):
+        if len(re.findall(r'\'.\'', line)) == 1:
+            val = re.findall(r'\'.\'', line)[0]
+            lines = lines.replace(val, str(ord(val[1: len(val) - 1])), 1)
         if len(re.findall(r'\s?org\s', line)) == 1:
             address = int(re.findall(r'\d+', line)[0])
             continue
@@ -153,7 +156,7 @@ def read_file(input_name: str):
 
 if __name__ == '__main__':
     lines = read_file('input.txt')
-    lines = replace_marks(lines)
+    lines = replace_marks_and_chars(lines)
     lexemes = scan_lexemes(''.join(lines))
     stack = lexemes_to_commands(lexemes)
     for instruction in stack:

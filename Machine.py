@@ -47,7 +47,7 @@ class ALU:
 
 
 class AddressDecoder:
-    MEMORY_ACCESS_TIME: int = 50
+    MEMORY_ACCESS_TIME: int = 10
     CACHE_LINES_COUNT: int = 10
     INPUT_MAPPED: int = 1023
     OUTPUT_MAPPED: int = 1022
@@ -441,12 +441,19 @@ class ControlUnit:
         self.ticks_counter += 1
 
 
+def check_start(mem: list[Command | int]):
+    for i in range(len(mem)):
+        if isinstance(mem[i], Command) and mem[i].is_start:
+            return i
+    return 0
+
 if __name__ == "__main__":
     mem = json.load(open("output.txt", 'r'), object_hook=dictToCommand)
-    input: list[int | str] = [13] + list('Hello, World!')
+    input: list[int | str] = [11] + list('hello world')
     alu = ALU()
     address_decoder = AddressDecoder(mem, input)
     comp = ACCopm(alu, address_decoder)
+    comp.IP = check_start(mem)
     cu = ControlUnit(comp)
     while cu.process_mc():
         continue
