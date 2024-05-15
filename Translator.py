@@ -12,7 +12,7 @@ ADDR -> (^[a-zA-Z]+$)MNC | E
 E    -> to stderr
 '''
 
-mrk_pattern = re.compile(r'^[a-zA-Z]+:')
+mrk_pattern = re.compile(r'^\.?[a-zA-Z_-]+:')
 mnc_pattern = re.compile(r'^[a-zA-Z]+$')
 addr_pattern = re.compile(r'^[\[\+\-#]?[\+\-]?\d+\]?$')
 start_address = 0
@@ -34,7 +34,7 @@ class Lexeme:
 def parse_addressing_type(word: str):
     if word[0] == '[':
         if word[1] == '+' or word[1] == '-':
-            return AddressingType.INDIRECT_RELATIVE
+            return AddressingType.STACK_RELATIVE
         return AddressingType.INDIRECT_STRAIGHT
     elif word[0] == '#':
         return AddressingType.DIRECT_LOAD

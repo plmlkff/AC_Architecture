@@ -1,5 +1,5 @@
 import json
-
+import sys
 from BasicTypes import Command, MicroCommand, MicroInstruction, AddressingType, dictToCommand, OpCode
 from random import randint
 
@@ -47,19 +47,20 @@ class ALU:
 
 
 class AddressDecoder:
-    MEMORY_ACCESS_TIME: int = 10
-    CACHE_LINES_COUNT: int = 4
+    MEMORY_ACCESS_TIME: int = 50
+    CACHE_LINES_COUNT: int = 10
     INPUT_MAPPED: int = 1023
     OUTPUT_MAPPED: int = 1022
     MEM_SIZE = 1024
-    input_buffer: list[int] = []
-    output_buffer: list[int] = []
+    input_buffer: list[int | str] = []
+    output_buffer: list[str] = []
     mem: list[int | Command] = []
     cache: {int: Command | int}
 
-    def __init__(self, mem):
+    def __init__(self, mem, input_buffer):
         self.mem = mem
         self.cache = {}
+        self.input_buffer = input_buffer
 
     def get(self, address: int, tick_log_callback):
         if address < 0:
@@ -69,14 +70,15 @@ class AddressDecoder:
                 raise Exception('Buffer is empty!')
             for i in range(self.MEMORY_ACCESS_TIME):
                 tick_log_callback('MEMORY ACCESS TICK')
-            return self.input_buffer.pop(0)
+            stream_val = self.input_buffer.pop(0)
+            return stream_val if isinstance(stream_val, int) else ord(stream_val)
         if address in self.cache:
             tick_log_callback('CACHE ACCESS TICK')
             return self.cache[address]
         else:
             if len(self.cache) == self.CACHE_LINES_COUNT and self.CACHE_LINES_COUNT != 0:
                 tick_log_callback('CACHE DELETE TICK')
-                del self.cache[list(self.cache.keys())[randint(0, self.CACHE_LINES_COUNT-1)]]
+                del self.cache[list(self.cache.keys())[randint(0, self.CACHE_LINES_COUNT - 1)]]
             if self.CACHE_LINES_COUNT != 0:
                 self.cache[address] = self.mem[address]
             for i in range(self.MEMORY_ACCESS_TIME):
@@ -89,12 +91,12 @@ class AddressDecoder:
         if address == self.OUTPUT_MAPPED:
             for i in range(self.MEMORY_ACCESS_TIME):
                 tick_log_callback('MEMORY ACCESS TICK')
-            self.output_buffer.append(value)
+            self.output_buffer.append(chr(value))
         if address in self.cache:
             tick_log_callback('CACHE WRITE TICK')
             self.cache[address] = value
         for i in range(self.MEMORY_ACCESS_TIME):
-                tick_log_callback('MEMORY ACCESS TICK')
+            tick_log_callback('MEMORY ACCESS TICK')
         self.mem[address] = value
 
 
@@ -173,8 +175,9 @@ class ACCopm:
 
 
 class ControlUnit:
+    INSTR_FETCH = 0
     OPERAND_FETCH_INDEX = 18
-    POST_EXECUTION_INDEX = 63
+    POST_EXECUTION_INDEX = 69
 
     mIP: int = 0  # Micro memory IP
     comp: ACCopm
@@ -185,7 +188,8 @@ class ControlUnit:
         self.comp = comp
         self.microcode_mem = [
             # Instruction fetch
-            MicroCommand(False, [MicroInstruction.LOAD_IP, MicroInstruction.LATCH_AR]),  # 0: IP+1 -> IP, AR
+            MicroCommand(False, [MicroInstruction.LOAD_IP, MicroInstruction.SUM,
+                                 MicroInstruction.LATCH_AR]),  # 0: IP -> AR
             MicroCommand(False, [MicroInstruction.RD_MEM, MicroInstruction.LATCH_DR]),  # 1: MEM(AR) -> DR
             MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
                                  MicroInstruction.LATCH_CR]),  # 2: DR -> CR
@@ -253,68 +257,81 @@ class ControlUnit:
             MicroCommand(False, [MicroInstruction.RD_MEM, MicroInstruction.LATCH_DR]),  # 32: MEM(AR) -> DR
             MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
                                  MicroInstruction.LATCH_AC]),  # 33: DR -> AC
-            MicroCommand(False, [MicroInstruction.LOAD_SP,  MicroInstruction.SUM,
+            MicroCommand(False, [MicroInstruction.LOAD_SP, MicroInstruction.SUM,
                                  MicroInstruction.INC, MicroInstruction.LATCH_SP]),  # 34: SP + 1 -> SP
             MicroCommand(True, [MicroInstruction.JUMP], self.POST_EXECUTION_INDEX),  # 35: Post-exec -> mIP
+            # swap
+            MicroCommand(False, [MicroInstruction.LOAD_SP, MicroInstruction.SUM,
+                                 MicroInstruction.LATCH_AR]),  # 36: SP -> AR
+            MicroCommand(False, [MicroInstruction.RD_MEM, MicroInstruction.LATCH_DR]),  # 37: MEM(AR) -> DR
+            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
+                                 MicroInstruction.LATCH_BR]),  # 38: DR -> BR
+            MicroCommand(False, [MicroInstruction.LOAD_AC, MicroInstruction.SUM,
+                                 MicroInstruction.LATCH_DR, MicroInstruction.WR_MEM]),  # 39: AC -> DR -> MEM(AR)
+            MicroCommand(False, [MicroInstruction.LOAD_BR, MicroInstruction.SUM,
+                                 MicroInstruction.LATCH_AC]),  # 40: BR -> AC
+            MicroCommand(True, [MicroInstruction.JUMP], self.POST_EXECUTION_INDEX),  # 41: Post-exec -> mIP
             # call (use with direct load by default)
             MicroCommand(False, [MicroInstruction.LOAD_IP, MicroInstruction.SUM,
-                                 MicroInstruction.INC, MicroInstruction.LATCH_BR]),  # 36: IP + 1 -> BR
-            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_IP]),  # 37: DR -> IP
-            MicroCommand(False, [MicroInstruction.LOAD_SP, MicroInstruction.INV_L,
-                                 MicroInstruction.SUM, MicroInstruction.LATCH_SP,
-                                 MicroInstruction.LATCH_AR]),  # 38: SP + ~0 -> SP, AR
-            MicroCommand(False, [MicroInstruction.LOAD_BR, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_DR, MicroInstruction.WR_MEM]),  # 39: BR -> DR -> MEM(AR)
-            MicroCommand(True, [MicroInstruction.JUMP], 0),  # 40: 0 -> mIP
-            # ret
-            MicroCommand(False, [MicroInstruction.LOAD_SP, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_AR]),  # 41: SP -> AR
-            MicroCommand(False, [MicroInstruction.RD_MEM, MicroInstruction.LATCH_DR]),  # 42: MEM(AR) -> DR
+                                 MicroInstruction.INC, MicroInstruction.LATCH_BR]),  # 42: IP + 1 -> BR
             MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
                                  MicroInstruction.LATCH_IP]),  # 43: DR -> IP
-            MicroCommand(False, [MicroInstruction.LOAD_SP,  MicroInstruction.SUM,
-                                 MicroInstruction.INC, MicroInstruction.LATCH_SP]),  # 44: SP + 1 -> SP
-            MicroCommand(True, [MicroInstruction.JUMP], 0),  # 45: 0 -> mIP
+            MicroCommand(False, [MicroInstruction.LOAD_SP, MicroInstruction.INV_L,
+                                 MicroInstruction.SUM, MicroInstruction.LATCH_SP,
+                                 MicroInstruction.LATCH_AR]),  # 44: SP + ~0 -> SP, AR
+            MicroCommand(False, [MicroInstruction.LOAD_BR, MicroInstruction.SUM,
+                                 MicroInstruction.LATCH_DR, MicroInstruction.WR_MEM]),  # 45: BR -> DR -> MEM(AR)
+            MicroCommand(True, [MicroInstruction.JUMP], self.INSTR_FETCH),  # 46: 0 -> mIP
+            # ret
+            MicroCommand(False, [MicroInstruction.LOAD_SP, MicroInstruction.SUM,
+                                 MicroInstruction.LATCH_AR]),  # 47: SP -> AR
+            MicroCommand(False, [MicroInstruction.RD_MEM, MicroInstruction.LATCH_DR]),  # 48: MEM(AR) -> DR
+            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
+                                 MicroInstruction.LATCH_IP]),  # 49: DR -> IP
+            MicroCommand(False, [MicroInstruction.LOAD_SP, MicroInstruction.SUM,
+                                 MicroInstruction.INC, MicroInstruction.LATCH_SP]),  # 50: SP + 1 -> SP
+            MicroCommand(True, [MicroInstruction.JUMP], self.INSTR_FETCH),  # 51: 0 -> mIP
             # cmp
             MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.LOAD_AC,
                                  MicroInstruction.INV_R, MicroInstruction.SUM,
-                                 MicroInstruction.INC, MicroInstruction.SET_NZ]),  # 46: AC + ~DR + 1 -> SET N,V
-            MicroCommand(True, [MicroInstruction.JUMP], self.POST_EXECUTION_INDEX),  # 47: Post-exec -> mIP
+                                 MicroInstruction.INC, MicroInstruction.SET_NZ]),  # 52: AC + ~DR + 1 -> SET N,V
+            MicroCommand(True, [MicroInstruction.JUMP], self.POST_EXECUTION_INDEX),  # 53: Post-exec -> mIP
             # jmp use with direct load of address by default
             MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_IP]),  # 48: DR -> IP
-            MicroCommand(True, [MicroInstruction.JUMP], 0),  # 61: 0 -> mIP
+                                 MicroInstruction.LATCH_IP]),  # 54: DR -> IP
+            MicroCommand(True, [MicroInstruction.JUMP], self.INSTR_FETCH),  # 55: 0 -> mIP
             # je use with direct load of address by default
             MicroCommand(True, [MicroInstruction.JUMP_IF, MicroInstruction.CHECK_nZ],
-                         self.POST_EXECUTION_INDEX),  # 50: if not Zero -> Post-exec
-            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_IP]),  # 51: DR -> IP
-            MicroCommand(True, [MicroInstruction.JUMP], 0),  # 61: 0 -> mIP
-            # jne use with direct load of address by default
-            MicroCommand(True, [MicroInstruction.JUMP_IF, MicroInstruction.CHECK_Z],
-                         self.POST_EXECUTION_INDEX),  # 53: if Zero -> Post-exec
-            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_IP]),  # 54: DR -> IP
-            MicroCommand(True, [MicroInstruction.JUMP], 0),  # 61: 0 -> mIP
-            # jg use with direct load of address by default
-            MicroCommand(True, [MicroInstruction.JUMP_IF, MicroInstruction.CHECK_N],
-                         self.POST_EXECUTION_INDEX),  # 56: if Sign -> Post-exec
+                         self.POST_EXECUTION_INDEX),  # 56: if not Zero -> Post-exec
             MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
                                  MicroInstruction.LATCH_IP]),  # 57: DR -> IP
-            MicroCommand(True, [MicroInstruction.JUMP], 0),  # 61: 0 -> mIP
-            # jl use with direct load of address by default
-            MicroCommand(True, [MicroInstruction.JUMP_IF, MicroInstruction.CHECK_nN],
-                         self.POST_EXECUTION_INDEX),  # 59: if not Sign -> Post-exec
+            MicroCommand(True, [MicroInstruction.JUMP], self.INSTR_FETCH),  # 58: 0 -> mIP
+            # jne use with direct load of address by default
+            MicroCommand(True, [MicroInstruction.JUMP_IF, MicroInstruction.CHECK_Z],
+                         self.POST_EXECUTION_INDEX),  # 59: if Zero -> Post-exec
             MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
                                  MicroInstruction.LATCH_IP]),  # 60: DR -> IP
-            MicroCommand(True, [MicroInstruction.JUMP], 0),  # 61: 0 -> mIP
+            MicroCommand(True, [MicroInstruction.JUMP], self.INSTR_FETCH),  # 61: 0 -> mIP
+            # jg use with direct load of address by default
+            MicroCommand(True, [MicroInstruction.JUMP_IF, MicroInstruction.CHECK_N,
+                                MicroInstruction.CHECK_Z], self.POST_EXECUTION_INDEX),
+            # 62: if Sign or Zero -> Post-exec
+            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
+                                 MicroInstruction.LATCH_IP]),  # 63: DR -> IP
+            MicroCommand(True, [MicroInstruction.JUMP], self.INSTR_FETCH),  # 64: 0 -> mIP
+            # jl use with direct load of address by default
+            MicroCommand(True, [MicroInstruction.JUMP_IF, MicroInstruction.CHECK_nN,
+                                MicroInstruction.CHECK_Z], self.POST_EXECUTION_INDEX),
+            # 65: if not Sign or Zero -> Post-exec
+            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
+                                 MicroInstruction.LATCH_IP]),  # 66: DR -> IP
+            MicroCommand(True, [MicroInstruction.JUMP], self.INSTR_FETCH),  # 67: 0 -> mIP
             # hlt
-            MicroCommand(True, [MicroInstruction.HLT]),  # 62: stop machine
+            MicroCommand(True, [MicroInstruction.HLT]),  # 68: stop machine
             # Post-execution
             MicroCommand(False, [MicroInstruction.LOAD_IP, MicroInstruction.SUM,
-                                 MicroInstruction.INC, MicroInstruction.LATCH_IP]),  # 63: IP + 1 -> IP
-            MicroCommand(True, [MicroInstruction.JUMP], 0)  # 64: 0 -> mIP
+                                 MicroInstruction.INC, MicroInstruction.LATCH_IP]),  # 69: IP + 1 -> IP
+            MicroCommand(True, [MicroInstruction.JUMP], self.INSTR_FETCH)  # 70: 0 -> mIP
         ]
 
     # Функция выполняет очередную команду, возращает True, если не было Hlt и False, если был (надо ли продолжать)
@@ -351,19 +368,16 @@ class ControlUnit:
                 self.mIP = self.comp.CR.op_code.value
                 return True
             if MicroInstruction.JUMP_IF in mc.signals:
-                if MicroInstruction.CHECK_N in mc.signals and not self.comp.alu.N:
-                    self.mIP += 1
-                    return True
-                if MicroInstruction.CHECK_Z in mc.signals and not self.comp.alu.Z:
-                    self.mIP += 1
-                    return True
-                if MicroInstruction.CHECK_nN in mc.signals and self.comp.alu.N:
-                    self.mIP += 1
-                    return True
-                if MicroInstruction.CHECK_nZ in mc.signals and self.comp.alu.Z:
-                    self.mIP += 1
-                    return True
-                self.mIP = mc.value
+                check_res = False
+                if MicroInstruction.CHECK_nZ in mc.signals and self.comp.alu.Z == 0:
+                    check_res = True
+                if MicroInstruction.CHECK_Z in mc.signals and self.comp.alu.Z == 1:
+                    check_res = True
+                if MicroInstruction.CHECK_nN in mc.signals and self.comp.alu.N == 0:
+                    check_res = True
+                if MicroInstruction.CHECK_N in mc.signals and self.comp.alu.N == 1:
+                    check_res = True
+                self.mIP = mc.value if check_res else self.mIP + 1
                 return True
             if MicroInstruction.HLT in mc.signals:
                 return False
@@ -429,9 +443,11 @@ class ControlUnit:
 
 if __name__ == "__main__":
     mem = json.load(open("output.txt", 'r'), object_hook=dictToCommand)
+    input: list[int | str] = [13] + list('Hello, World!')
     alu = ALU()
-    address_decoder = AddressDecoder(mem)
+    address_decoder = AddressDecoder(mem, input)
     comp = ACCopm(alu, address_decoder)
     cu = ControlUnit(comp)
     while cu.process_mc():
         continue
+    print(address_decoder.output_buffer)

@@ -1,7 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass
 import json
-from typing import cast
 
 
 class OpCode(Enum):
@@ -13,17 +12,18 @@ class OpCode(Enum):
     WR = 26  # Write to memory
     PUSH = 28  # Put value on the stack
     POP = 31  # Take value from the stack
+    SWAP = 36  # Swap value on stack and acc
 
-    CALL = 36  # Call function
-    RET = 41  # Return from function
-    CMP = 46  # Compare AC with given value
-    JMP = 48  # Jump to address
-    JE = 50  # Jump if equals
-    JNE = 53  # Jump if not equals
-    JG = 56  # Jump if greater
-    JL = 59  # Jump if lower
+    CALL = 42  # Call function
+    RET = 47  # Return from function
+    CMP = 52  # Compare AC with given value
+    JMP = 54  # Jump to address
+    JE = 56  # Jump if equals
+    JNE = 59  # Jump if not equals
+    JG = 62  # Jump if greater
+    JL = 65  # Jump if lower
 
-    HLT = 62
+    HLT = 68  # Hlt
 
     def __str__(self):
         return self.name
@@ -145,6 +145,7 @@ commands = {
     'wr': OpCode.WR,
     'push': OpCode.PUSH,
     'pop': OpCode.POP,
+    'swap': OpCode.SWAP,
     'call': OpCode.CALL,
     'ret': OpCode.RET,
     'cmp': OpCode.CMP,
