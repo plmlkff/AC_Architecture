@@ -449,7 +449,7 @@ def check_start(mem: list[Command | int]):
 
 if __name__ == "__main__":
     mem = json.load(open("output.txt", 'r'), object_hook=dictToCommand)
-    input: list[int | str] = [11] + list('hello world')
+    input: list[int | str] = [4] + list('Paul')
     alu = ALU()
     address_decoder = AddressDecoder(mem, input)
     comp = ACCopm(alu, address_decoder)
@@ -457,4 +457,4 @@ if __name__ == "__main__":
     cu = ControlUnit(comp)
     while cu.process_mc():
         continue
-    print(address_decoder.output_buffer)
+    print(''.join(address_decoder.output_buffer))

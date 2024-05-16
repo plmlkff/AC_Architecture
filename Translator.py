@@ -96,7 +96,8 @@ def replace_marks_and_chars(lines: list[str]):
         mark = mrk_pattern.findall(line)[0]
         if mark == "START:":
             start_address = address
-        lines = lines.replace(mark, '').replace(mark[0:len(mark) - 1], str(address))
+        lines = lines.replace(mark, '')
+        lines = re.sub(rf'{mark[0:len(mark) - 1]}\b', str(address), lines)
         address += 1
     return lines
 
