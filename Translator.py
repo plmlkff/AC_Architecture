@@ -98,7 +98,7 @@ def replace_marks_and_chars(lines: list[str]):
         if mark == "START:":  # Запоминаем адрес стартовой метки
             start_address = address
         lines = re.sub(rf'\b{mark}', '', lines)
-        lines = re.sub(rf'\b(?=[\+\-\[\#]?){mark[0:len(mark) - 1]}\b', str(address), lines)
+        lines = re.sub(rf'(?<=[\+\-\[\#\b ]){mark[0:len(mark) - 1]}\b', str(address), lines)
         address += 1
     return lines
 
