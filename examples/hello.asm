@@ -17,8 +17,8 @@ START:
     ld POINTER
     add #1
     cmp LENGTH
-    je #.end
+    je #end
     wr POINTER
     jmp #START
-.end:
+end:
     hlt

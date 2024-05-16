@@ -97,8 +97,8 @@ def replace_marks_and_chars(lines: list[str]):
         mark = mrk_pattern.findall(line)[0]
         if mark == "START:":
             start_address = address
-        lines = lines.replace(mark, '')
-        lines = re.sub(rf'{mark[0:len(mark) - 1]}\b', str(address), lines)
+        lines = re.sub(rf'\b{mark}', '', lines)
+        lines = re.sub(rf'\b[\+\-\[\#]?{mark[0:len(mark) - 1]}\b', str(address), lines)
         address += 1
     return lines
 
@@ -162,8 +162,5 @@ if __name__ == '__main__':
     lines = replace_marks_and_chars(lines)
     lexemes = scan_lexemes(''.join(lines))
     stack = lexemes_to_commands(lexemes)
-    for instruction in stack:
-        if instruction == 0: continue
-        print(instruction)
     json.dump(stack, open(output_file_name, 'w'), cls=CommandEncoder)
     print(output_file_name)

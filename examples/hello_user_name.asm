@@ -36,59 +36,59 @@ START:
     ld WIYN_PTR
     add WIYN_LEN
     wr WIYN_END
-.wiyn_loop:
+wiyn_loop:
     ld [WIYN_PTR]
     wr 1022
     ld WIYN_PTR
     add #1
     cmp WIYN_END
-    je #.name
+    je #name
     wr WIYN_PTR
-    jmp #.wiyn_loop
-.name:
+    jmp #wiyn_loop
+name:
     ld 1023
     wr NAME_LEN
     cmp #0
-    je #.hello
+    je #hello
     add #BUFF
     wr BUFF_END
-.read_name_loop:
+read_name_loop:
     ld 1023
     wr [BUFF_PTR]
     ld BUFF_PTR
     add #1
     cmp BUFF_END
-    je #.hello
+    je #hello
     wr BUFF_PTR
-    jmp #.read_name_loop
-.hello:
+    jmp #read_name_loop
+hello:
     ld #BUFF
     wr BUFF_PTR
     ld HELLO_PTR
     add HELLO_LEN
     wr HELLO_END
-.hello_loop:
+hello_loop:
     ld [HELLO_PTR]
     wr 1022
     ld HELLO_PTR
     add #1
     cmp HELLO_END
-    je #.print_name_loop
+    je #print_name_loop
     wr HELLO_PTR
-    jmp #.hello_loop
-.print_name_loop:
+    jmp #hello_loop
+print_name_loop:
     ld [BUFF_PTR]
     wr 1022
     ld BUFF_PTR
     add #1
     cmp BUFF_END
-    je #.print_exclamation
+    je #print_exclamation
     wr BUFF_PTR
-    jmp #.print_name_loop
-.print_exclamation:
+    jmp #print_name_loop
+print_exclamation:
     ld EXCLAMATION
     wr 1022
-.end:
+end:
     hlt
 org 100
 BUFF_END: word 0
