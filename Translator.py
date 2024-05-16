@@ -2,7 +2,7 @@ import sys
 from dataclasses import dataclass
 from enum import Enum
 import re
-from BasicTypes import AddressingType, OpCode, commands, CommandEncoder, Command
+from BasicTypes import AddressingType, commands, CommandEncoder, Command
 import json
 
 '''
@@ -148,6 +148,10 @@ def scan_lexemes(lines: str):
         current_state = lexeme.type
     return lexemes
 
+def remove_comments(lines: list[str]):
+    for i in range(len(lines)):
+        lines[i] = lines[i].split(' ; ')[0]
+    return lines
 
 def read_file(input_name: str):
     f = open(input_name, "r")
@@ -159,6 +163,7 @@ def read_file(input_name: str):
 if __name__ == '__main__':
     _, input_file_name, output_file_name = sys.argv
     lines = read_file(input_file_name)
+    lines = remove_comments(lines)
     lines = replace_marks_and_chars(lines)
     lexemes = scan_lexemes(''.join(lines))
     stack = lexemes_to_commands(lexemes)
