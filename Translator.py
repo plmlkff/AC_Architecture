@@ -13,7 +13,7 @@ ADDR -> (^[a-zA-Z]+$)MNC | E
 E    -> to stderr
 '''
 
-mrk_pattern = re.compile(r'^\.?[a-zA-Z_-]+:')
+mrk_pattern = re.compile(r'^[a-zA-Z_]+:')
 mnc_pattern = re.compile(r'^[a-zA-Z]+$')
 addr_pattern = re.compile(r'^[\[\+\-#]?[\+\-]?\d+\]?$')
 start_address = 0
@@ -85,20 +85,20 @@ def replace_marks_and_chars(lines: list[str]):
     lines = '\n'.join(lines)
     lines = lines.replace(':\n', ':')
     for line in lines.split('\n'):
-        if len(re.findall(r'\'.\'', line)) == 1:
+        if len(re.findall(r'\'.\'', line)) == 1:  # Замена литералов
             val = re.findall(r'\'.\'', line)[0]
             lines = lines.replace(val, str(ord(val[1: len(val) - 1])), 1)
-        if len(re.findall(r'\s?org\s', line)) == 1:
+        if len(re.findall(r'\s?org\s', line)) == 1:  # Поиск и подстановка переходов по памяти
             address = int(re.findall(r'\d+', line)[0])
             continue
-        if len(mrk_pattern.findall(line)) == 0:
+        if len(mrk_pattern.findall(line)) == 0:  # Проверка наличия метки в строчке
             address += 1
             continue
         mark = mrk_pattern.findall(line)[0]
-        if mark == "START:":
+        if mark == "START:":  # Запоминаем адрес стартовой метки
             start_address = address
         lines = re.sub(rf'\b{mark}', '', lines)
-        lines = re.sub(rf'\b[\+\-\[\#]?{mark[0:len(mark) - 1]}\b', str(address), lines)
+        lines = re.sub(rf'\b(?=[\+\-\[\#]?){mark[0:len(mark) - 1]}\b', str(address), lines)
         address += 1
     return lines
 
