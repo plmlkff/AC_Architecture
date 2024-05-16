@@ -334,6 +334,10 @@ class ControlUnit:
             MicroCommand(True, [MicroInstruction.JUMP], self.INSTR_FETCH)  # 70: 0 -> mIP
         ]
 
+    def start(self):
+        while self.process_mc():
+            continue
+
     # Функция выполняет очередную команду, возращает True, если не было Hlt и False, если был (надо ли продолжать)
     def process_mc(self):
         self.tick_log()
@@ -448,13 +452,14 @@ def check_start(mem: list[Command | int]):
     return 0
 
 if __name__ == "__main__":
-    mem = json.load(open("output.txt", 'r'), object_hook=dictToCommand)
-    input: list[int | str] = [4] + list('Paul')
+    args = sys.argv
+    mem = json.load(open(args[1], 'r'), object_hook=dictToCommand)
+    input: list[int | str] = list(open(args[2], 'r').read())
+    input = [len(input)] + input
     alu = ALU()
     address_decoder = AddressDecoder(mem, input)
     comp = ACCopm(alu, address_decoder)
     comp.IP = check_start(mem)
     cu = ControlUnit(comp)
-    while cu.process_mc():
-        continue
+    cu.start()
     print(''.join(address_decoder.output_buffer))

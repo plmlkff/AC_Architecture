@@ -1,3 +1,4 @@
+import sys
 from dataclasses import dataclass
 from enum import Enum
 import re
@@ -156,11 +157,13 @@ def read_file(input_name: str):
 
 
 if __name__ == '__main__':
-    lines = read_file('input.txt')
+    _, input_file_name, output_file_name = sys.argv
+    lines = read_file(input_file_name)
     lines = replace_marks_and_chars(lines)
     lexemes = scan_lexemes(''.join(lines))
     stack = lexemes_to_commands(lexemes)
     for instruction in stack:
         if instruction == 0: continue
         print(instruction)
-    json.dump(stack, open("output.txt", 'w'), cls=CommandEncoder)
+    json.dump(stack, open(output_file_name, 'w'), cls=CommandEncoder)
+    print(output_file_name)
