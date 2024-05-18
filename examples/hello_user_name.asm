@@ -7,7 +7,7 @@ HELLO: word 'h'
     word ' '
 HELLO_LEN: word 7
 EXCLAMATION: word '!'
-WIYN: word 'W'
+WIYN: word 'W' ; What is your name?\n
     word 'h'
     word 'a'
     word 't'
@@ -25,7 +25,7 @@ WIYN: word 'W'
     word 'm'
     word 'e'
     word '?'
-    word 10
+    word 10 ; '\n'
 WIYN_LEN: word 19
 NAME_LEN: word 0
 WIYN_PTR: word WIYN

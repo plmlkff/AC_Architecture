@@ -1,4 +1,5 @@
 import json
+import re
 import sys
 from BasicTypes import Command, MicroCommand, MicroInstruction, AddressingType, dictToCommand, OpCode
 from random import randint
@@ -451,11 +452,14 @@ def check_start(mem: list[Command | int]):
             return i
     return 0
 
+
 if __name__ == "__main__":
     args = sys.argv
     mem = json.load(open(args[1], 'r'), object_hook=dictToCommand)
-    input: list[int | str] = list(open(args[2], 'r').read())
-    input = [len(input)] + input
+    input_str = open(args[2], 'r').read()  # Считываем файл в строку
+    input_len = re.findall(r'^\d+(?=[^\d])', input_str)[0]  # Парсим регуляркой длину входного потока
+    input_str = input_str.replace(input_len, '', 1)  # Убираем длину вхожного потока из входной строки
+    input: list[int | str] = [int(input_len)] + list(input_str)  # Помещаем во входной буффер его длину + содержание
     alu = ALU()
     address_decoder = AddressDecoder(mem, input)
     comp = ACCopm(alu, address_decoder)
