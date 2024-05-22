@@ -7,12 +7,12 @@ import sys
 from dataclasses import dataclass
 from enum import Enum
 
-from impl.BasicTypes import AddressingType, Command, CommandEncoder, commands
+from BasicTypes import AddressingType, Command, CommandEncoder, commands
 
-"""
+r"""
 Грамматика автомата
 S    -> (^[a-zA-Z]+$)MNC | E
-MNC  -> ( ^(\[|\+|-|#){0,1}\d+(\]){0,1}$ )ADDR | (^[a-zA-Z]+$)MNC
+MNC  -> (^[\[+\-#]?[+\-]?\d+]?$)ADDR | (^[a-zA-Z]+$)MNC
 ADDR -> (^[a-zA-Z]+$)MNC | E
 E    -> to stderr
 """

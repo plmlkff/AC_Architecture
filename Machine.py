@@ -7,7 +7,7 @@ import sys
 from io import TextIOWrapper
 from random import randint
 
-from impl.BasicTypes import AddressingType, Command, MicroCommand, MicroInstruction, OpCode, dict_to_command
+from BasicTypes import AddressingType, Command, MicroCommand, MicroInstruction, OpCode, dict_to_command
 
 
 class ALU:
@@ -206,150 +206,233 @@ class ControlUnit:
         self.comp = comp
         self.microcode_mem = [
             # Instruction fetch
-            MicroCommand(False, [MicroInstruction.LOAD_IP, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_AR]),  # 0: IP -> AR
+            MicroCommand(
+                False, [MicroInstruction.LOAD_IP, MicroInstruction.SUM, MicroInstruction.LATCH_AR]
+            ),  # 0: IP -> AR
             MicroCommand(False, [MicroInstruction.RD_MEM, MicroInstruction.LATCH_DR]),  # 1: MEM(AR) -> DR
-            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_CR]),  # 2: DR -> CR
+            MicroCommand(
+                False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM, MicroInstruction.LATCH_CR]
+            ),  # 2: DR -> CR
             # Address fetch
             MicroCommand(True, [MicroInstruction.CHCK_ADDR_TYPE]),  # 3: ADDR_TYPE handler addr -> mIP
             # Absolute straight
-            MicroCommand(False, [MicroInstruction.CR_ADDR_TO_BUS, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_AR]),  # 4: CR(address) -> AR
+            MicroCommand(
+                False, [MicroInstruction.CR_ADDR_TO_BUS, MicroInstruction.SUM, MicroInstruction.LATCH_AR]
+            ),  # 4: CR(address) -> AR
             MicroCommand(True, [MicroInstruction.JUMP], self.OPERAND_FETCH_INDEX),  # 5: To operand fetch
             # Straight relative
-            MicroCommand(False, [MicroInstruction.CR_ADDR_TO_BUS, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_BR]),  # 6: CR(address) -> BR
-            MicroCommand(False, [MicroInstruction.LOAD_IP, MicroInstruction.LOAD_BR,
-                                 MicroInstruction.SUM, MicroInstruction.LATCH_AR]),  # 7: BR + IP -> AR
+            MicroCommand(
+                False, [MicroInstruction.CR_ADDR_TO_BUS, MicroInstruction.SUM, MicroInstruction.LATCH_BR]
+            ),  # 6: CR(address) -> BR
+            MicroCommand(
+                False,
+                [MicroInstruction.LOAD_IP, MicroInstruction.LOAD_BR, MicroInstruction.SUM, MicroInstruction.LATCH_AR],
+            ),  # 7: BR + IP -> AR
             MicroCommand(True, [MicroInstruction.JUMP], self.OPERAND_FETCH_INDEX),  # 8: To operand fetch
             # Indirect straight
-            MicroCommand(False, [MicroInstruction.CR_ADDR_TO_BUS, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_AR]),  # 9: CR(address) -> AR
+            MicroCommand(
+                False, [MicroInstruction.CR_ADDR_TO_BUS, MicroInstruction.SUM, MicroInstruction.LATCH_AR]
+            ),  # 9: CR(address) -> AR
             MicroCommand(False, [MicroInstruction.RD_MEM, MicroInstruction.LATCH_DR]),  # 10: MEM(AR) -> DR
-            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_AR]),  # 11: DR -> AR
+            MicroCommand(
+                False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM, MicroInstruction.LATCH_AR]
+            ),  # 11: DR -> AR
             MicroCommand(True, [MicroInstruction.JUMP], self.OPERAND_FETCH_INDEX),  # 12: To operand fetch
             #  Stack relative
-            MicroCommand(False, [MicroInstruction.CR_ADDR_TO_BUS, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_BR]),  # 13: CR(address) -> BR
-            MicroCommand(False, [MicroInstruction.LOAD_SP, MicroInstruction.LOAD_BR,
-                                 MicroInstruction.SUM, MicroInstruction.LATCH_AR]),  # 14: BR + SP -> AR
+            MicroCommand(
+                False, [MicroInstruction.CR_ADDR_TO_BUS, MicroInstruction.SUM, MicroInstruction.LATCH_BR]
+            ),  # 13: CR(address) -> BR
+            MicroCommand(
+                False,
+                [MicroInstruction.LOAD_SP, MicroInstruction.LOAD_BR, MicroInstruction.SUM, MicroInstruction.LATCH_AR],
+            ),  # 14: BR + SP -> AR
             MicroCommand(True, [MicroInstruction.JUMP], self.OPERAND_FETCH_INDEX),  # 15: To operand fetch
             # Direct load
-            MicroCommand(False, [MicroInstruction.CR_ADDR_TO_BUS, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_DR]),  # 16: CR(address) -> DR
+            MicroCommand(
+                False, [MicroInstruction.CR_ADDR_TO_BUS, MicroInstruction.SUM, MicroInstruction.LATCH_DR]
+            ),  # 16: CR(address) -> DR
             MicroCommand(True, [MicroInstruction.JUMP_TO_CR_OPCODE]),  # 17: Jump to command execution
             # Operand fetch
             MicroCommand(False, [MicroInstruction.RD_MEM, MicroInstruction.LATCH_DR]),  # 18: MEM(AR) -> DR
             MicroCommand(True, [MicroInstruction.JUMP_TO_CR_OPCODE]),  # 19: Jump to command execution
             # add
-            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.LOAD_AC,
-                                 MicroInstruction.SUM, MicroInstruction.SET_NZ,
-                                 MicroInstruction.LATCH_AC]),  # 20: DR + AC -> AC & SET N,V
+            MicroCommand(
+                False,
+                [
+                    MicroInstruction.LOAD_DR,
+                    MicroInstruction.LOAD_AC,
+                    MicroInstruction.SUM,
+                    MicroInstruction.SET_NZ,
+                    MicroInstruction.LATCH_AC,
+                ],
+            ),  # 20: DR + AC -> AC & SET N,V
             MicroCommand(True, [MicroInstruction.JUMP], self.POST_EXECUTION_INDEX),  # 21: Post-exec -> mIP
             # sub
-            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.LOAD_AC,
-                                 MicroInstruction.INV_R, MicroInstruction.SUM,
-                                 MicroInstruction.INC, MicroInstruction.SET_NZ,
-                                 MicroInstruction.LATCH_AC]),  # 22: ~DR + AC + 1 -> AC & SET N,V
+            MicroCommand(
+                False,
+                [
+                    MicroInstruction.LOAD_DR,
+                    MicroInstruction.LOAD_AC,
+                    MicroInstruction.INV_R,
+                    MicroInstruction.SUM,
+                    MicroInstruction.INC,
+                    MicroInstruction.SET_NZ,
+                    MicroInstruction.LATCH_AC,
+                ],
+            ),  # 22: ~DR + AC + 1 -> AC & SET N,V
             MicroCommand(True, [MicroInstruction.JUMP], self.POST_EXECUTION_INDEX),  # 23: Post-exec -> mIP
             # ld
-            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_AC]),  # 24: DR -> AC
+            MicroCommand(
+                False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM, MicroInstruction.LATCH_AC]
+            ),  # 24: DR -> AC
             MicroCommand(True, [MicroInstruction.JUMP], self.POST_EXECUTION_INDEX),  # 25: Post-exec -> mIP
             # wr
-            MicroCommand(False, [MicroInstruction.LOAD_AC, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_DR, MicroInstruction.WR_MEM]),  # 26: AC -> DR -> MEM(AR)
+            MicroCommand(
+                False,
+                [MicroInstruction.LOAD_AC, MicroInstruction.SUM, MicroInstruction.LATCH_DR, MicroInstruction.WR_MEM],
+            ),  # 26: AC -> DR -> MEM(AR)
             MicroCommand(True, [MicroInstruction.JUMP], self.POST_EXECUTION_INDEX),  # 27: Post-exec -> mIP
             # push
-            MicroCommand(False, [MicroInstruction.LOAD_SP, MicroInstruction.INV_L,
-                                 MicroInstruction.SUM, MicroInstruction.LATCH_SP,
-                                 MicroInstruction.LATCH_AR]),  # 28: SP + ~0 -> SP, AR
-            MicroCommand(False, [MicroInstruction.LOAD_AC, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_DR, MicroInstruction.WR_MEM]),  # 29: AC -> DR -> MEM(AR)
+            MicroCommand(
+                False,
+                [
+                    MicroInstruction.LOAD_SP,
+                    MicroInstruction.INV_L,
+                    MicroInstruction.SUM,
+                    MicroInstruction.LATCH_SP,
+                    MicroInstruction.LATCH_AR,
+                ],
+            ),  # 28: SP + ~0 -> SP, AR
+            MicroCommand(
+                False,
+                [MicroInstruction.LOAD_AC, MicroInstruction.SUM, MicroInstruction.LATCH_DR, MicroInstruction.WR_MEM],
+            ),  # 29: AC -> DR -> MEM(AR)
             MicroCommand(True, [MicroInstruction.JUMP], self.POST_EXECUTION_INDEX),  # 30: Post-exec -> mIP
             # pop
-            MicroCommand(False, [MicroInstruction.LOAD_SP, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_AR]),  # 31: SP -> AR
+            MicroCommand(
+                False, [MicroInstruction.LOAD_SP, MicroInstruction.SUM, MicroInstruction.LATCH_AR]
+            ),  # 31: SP -> AR
             MicroCommand(False, [MicroInstruction.RD_MEM, MicroInstruction.LATCH_DR]),  # 32: MEM(AR) -> DR
-            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_AC]),  # 33: DR -> AC
-            MicroCommand(False, [MicroInstruction.LOAD_SP, MicroInstruction.SUM,
-                                 MicroInstruction.INC, MicroInstruction.LATCH_SP]),  # 34: SP + 1 -> SP
+            MicroCommand(
+                False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM, MicroInstruction.LATCH_AC]
+            ),  # 33: DR -> AC
+            MicroCommand(
+                False, [MicroInstruction.LOAD_SP, MicroInstruction.SUM, MicroInstruction.INC, MicroInstruction.LATCH_SP]
+            ),  # 34: SP + 1 -> SP
             MicroCommand(True, [MicroInstruction.JUMP], self.POST_EXECUTION_INDEX),  # 35: Post-exec -> mIP
             # swap
-            MicroCommand(False, [MicroInstruction.LOAD_SP, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_AR]),  # 36: SP -> AR
+            MicroCommand(
+                False, [MicroInstruction.LOAD_SP, MicroInstruction.SUM, MicroInstruction.LATCH_AR]
+            ),  # 36: SP -> AR
             MicroCommand(False, [MicroInstruction.RD_MEM, MicroInstruction.LATCH_DR]),  # 37: MEM(AR) -> DR
-            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_BR]),  # 38: DR -> BR
-            MicroCommand(False, [MicroInstruction.LOAD_AC, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_DR, MicroInstruction.WR_MEM]),  # 39: AC -> DR -> MEM(AR)
-            MicroCommand(False, [MicroInstruction.LOAD_BR, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_AC]),  # 40: BR -> AC
+            MicroCommand(
+                False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM, MicroInstruction.LATCH_BR]
+            ),  # 38: DR -> BR
+            MicroCommand(
+                False,
+                [MicroInstruction.LOAD_AC, MicroInstruction.SUM, MicroInstruction.LATCH_DR, MicroInstruction.WR_MEM],
+            ),  # 39: AC -> DR -> MEM(AR)
+            MicroCommand(
+                False, [MicroInstruction.LOAD_BR, MicroInstruction.SUM, MicroInstruction.LATCH_AC]
+            ),  # 40: BR -> AC
             MicroCommand(True, [MicroInstruction.JUMP], self.POST_EXECUTION_INDEX),  # 41: Post-exec -> mIP
             # call (use with direct load by default)
-            MicroCommand(False, [MicroInstruction.LOAD_IP, MicroInstruction.SUM,
-                                 MicroInstruction.INC, MicroInstruction.LATCH_BR]),  # 42: IP + 1 -> BR
-            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_IP]),  # 43: DR -> IP
-            MicroCommand(False, [MicroInstruction.LOAD_SP, MicroInstruction.INV_L,
-                                 MicroInstruction.SUM, MicroInstruction.LATCH_SP,
-                                 MicroInstruction.LATCH_AR]),  # 44: SP + ~0 -> SP, AR
-            MicroCommand(False, [MicroInstruction.LOAD_BR, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_DR, MicroInstruction.WR_MEM]),  # 45: BR -> DR -> MEM(AR)
+            MicroCommand(
+                False, [MicroInstruction.LOAD_IP, MicroInstruction.SUM, MicroInstruction.INC, MicroInstruction.LATCH_BR]
+            ),  # 42: IP + 1 -> BR
+            MicroCommand(
+                False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM, MicroInstruction.LATCH_IP]
+            ),  # 43: DR -> IP
+            MicroCommand(
+                False,
+                [
+                    MicroInstruction.LOAD_SP,
+                    MicroInstruction.INV_L,
+                    MicroInstruction.SUM,
+                    MicroInstruction.LATCH_SP,
+                    MicroInstruction.LATCH_AR,
+                ],
+            ),  # 44: SP + ~0 -> SP, AR
+            MicroCommand(
+                False,
+                [MicroInstruction.LOAD_BR, MicroInstruction.SUM, MicroInstruction.LATCH_DR, MicroInstruction.WR_MEM],
+            ),  # 45: BR -> DR -> MEM(AR)
             MicroCommand(True, [MicroInstruction.JUMP], self.INSTR_FETCH),  # 46: 0 -> mIP
             # ret
-            MicroCommand(False, [MicroInstruction.LOAD_SP, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_AR]),  # 47: SP -> AR
+            MicroCommand(
+                False, [MicroInstruction.LOAD_SP, MicroInstruction.SUM, MicroInstruction.LATCH_AR]
+            ),  # 47: SP -> AR
             MicroCommand(False, [MicroInstruction.RD_MEM, MicroInstruction.LATCH_DR]),  # 48: MEM(AR) -> DR
-            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_IP]),  # 49: DR -> IP
-            MicroCommand(False, [MicroInstruction.LOAD_SP, MicroInstruction.SUM,
-                                 MicroInstruction.INC, MicroInstruction.LATCH_SP]),  # 50: SP + 1 -> SP
+            MicroCommand(
+                False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM, MicroInstruction.LATCH_IP]
+            ),  # 49: DR -> IP
+            MicroCommand(
+                False, [MicroInstruction.LOAD_SP, MicroInstruction.SUM, MicroInstruction.INC, MicroInstruction.LATCH_SP]
+            ),  # 50: SP + 1 -> SP
             MicroCommand(True, [MicroInstruction.JUMP], self.INSTR_FETCH),  # 51: 0 -> mIP
             # cmp
-            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.LOAD_AC,
-                                 MicroInstruction.INV_R, MicroInstruction.SUM,
-                                 MicroInstruction.INC, MicroInstruction.SET_NZ]),  # 52: AC + ~DR + 1 -> SET N,V
+            MicroCommand(
+                False,
+                [
+                    MicroInstruction.LOAD_DR,
+                    MicroInstruction.LOAD_AC,
+                    MicroInstruction.INV_R,
+                    MicroInstruction.SUM,
+                    MicroInstruction.INC,
+                    MicroInstruction.SET_NZ,
+                ],
+            ),  # 52: AC + ~DR + 1 -> SET N,V
             MicroCommand(True, [MicroInstruction.JUMP], self.POST_EXECUTION_INDEX),  # 53: Post-exec -> mIP
             # jmp use with direct load of address by default
-            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_IP]),  # 54: DR -> IP
+            MicroCommand(
+                False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM, MicroInstruction.LATCH_IP]
+            ),  # 54: DR -> IP
             MicroCommand(True, [MicroInstruction.JUMP], self.INSTR_FETCH),  # 55: 0 -> mIP
             # je use with direct load of address by default
-            MicroCommand(True, [MicroInstruction.JUMP_IF, MicroInstruction.CHECK_nZ],
-                         self.POST_EXECUTION_INDEX),  # 56: if not Zero -> Post-exec
-            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_IP]),  # 57: DR -> IP
+            MicroCommand(
+                True, [MicroInstruction.JUMP_IF, MicroInstruction.CHECK_nZ], self.POST_EXECUTION_INDEX
+            ),  # 56: if not Zero -> Post-exec
+            MicroCommand(
+                False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM, MicroInstruction.LATCH_IP]
+            ),  # 57: DR -> IP
             MicroCommand(True, [MicroInstruction.JUMP], self.INSTR_FETCH),  # 58: 0 -> mIP
             # jne use with direct load of address by default
-            MicroCommand(True, [MicroInstruction.JUMP_IF, MicroInstruction.CHECK_Z],
-                         self.POST_EXECUTION_INDEX),  # 59: if Zero -> Post-exec
-            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_IP]),  # 60: DR -> IP
+            MicroCommand(
+                True, [MicroInstruction.JUMP_IF, MicroInstruction.CHECK_Z], self.POST_EXECUTION_INDEX
+            ),  # 59: if Zero -> Post-exec
+            MicroCommand(
+                False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM, MicroInstruction.LATCH_IP]
+            ),  # 60: DR -> IP
             MicroCommand(True, [MicroInstruction.JUMP], self.INSTR_FETCH),  # 61: 0 -> mIP
             # jg use with direct load of address by default
-            MicroCommand(True, [MicroInstruction.JUMP_IF, MicroInstruction.CHECK_N,
-                                MicroInstruction.CHECK_Z], self.POST_EXECUTION_INDEX),
+            MicroCommand(
+                True,
+                [MicroInstruction.JUMP_IF, MicroInstruction.CHECK_N, MicroInstruction.CHECK_Z],
+                self.POST_EXECUTION_INDEX,
+            ),
             # 62: if Sign or Zero -> Post-exec
-            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_IP]),  # 63: DR -> IP
+            MicroCommand(
+                False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM, MicroInstruction.LATCH_IP]
+            ),  # 63: DR -> IP
             MicroCommand(True, [MicroInstruction.JUMP], self.INSTR_FETCH),  # 64: 0 -> mIP
             # jl use with direct load of address by default
-            MicroCommand(True, [MicroInstruction.JUMP_IF, MicroInstruction.CHECK_nN,
-                                MicroInstruction.CHECK_Z], self.POST_EXECUTION_INDEX),
+            MicroCommand(
+                True,
+                [MicroInstruction.JUMP_IF, MicroInstruction.CHECK_nN, MicroInstruction.CHECK_Z],
+                self.POST_EXECUTION_INDEX,
+            ),
             # 65: if not Sign or Zero -> Post-exec
-            MicroCommand(False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM,
-                                 MicroInstruction.LATCH_IP]),  # 66: DR -> IP
+            MicroCommand(
+                False, [MicroInstruction.LOAD_DR, MicroInstruction.SUM, MicroInstruction.LATCH_IP]
+            ),  # 66: DR -> IP
             MicroCommand(True, [MicroInstruction.JUMP], self.INSTR_FETCH),  # 67: 0 -> mIP
             # hlt
             MicroCommand(True, [MicroInstruction.HLT]),  # 68: stop impl
             # Post-execution
-            MicroCommand(False, [MicroInstruction.LOAD_IP, MicroInstruction.SUM,
-                                 MicroInstruction.INC, MicroInstruction.LATCH_IP]),  # 69: IP + 1 -> IP
-            MicroCommand(True, [MicroInstruction.JUMP], self.INSTR_FETCH)  # 70: 0 -> mIP
+            MicroCommand(
+                False, [MicroInstruction.LOAD_IP, MicroInstruction.SUM, MicroInstruction.INC, MicroInstruction.LATCH_IP]
+            ),  # 69: IP + 1 -> IP
+            MicroCommand(True, [MicroInstruction.JUMP], self.INSTR_FETCH),  # 70: 0 -> mIP
         ]
         self.f = f
 
@@ -458,9 +541,11 @@ class ControlUnit:
         return True
 
     def tick_log(self, info: str = ""):
-        log = (f"Tick #{self.ticks_counter}: {info} mIP: {self.m_ip}; AC: {self.comp.AC}; BR: {self.comp.BR}; "
-               f"DR: {self.comp.DR}; SP: {self.comp.SP}; CR: {self.comp.CR}; IP: {self.comp.IP}; "
-               f"AR: {self.comp.AR}; N: {self.comp.alu.N}; Z: {self.comp.alu.Z}")
+        log = (
+            f"Tick #{self.ticks_counter}: {info} mIP: {self.m_ip}; AC: {self.comp.AC}; BR: {self.comp.BR}; "
+            f"DR: {self.comp.DR}; SP: {self.comp.SP}; CR: {self.comp.CR}; IP: {self.comp.IP}; "
+            f"AR: {self.comp.AR}; N: {self.comp.alu.N}; Z: {self.comp.alu.Z}"
+        )
         logging.debug(log)
         self.f.write(log + "\n")
         self.ticks_counter += 1
@@ -479,7 +564,9 @@ def main(code_file_name, input_stream_file_name, output_file_name):
     input_str = open(input_stream_file_name).read()  # Считываем файл в строку
     input_len = re.findall(r"^\d+(?=\D)", input_str)[0]  # Парсим регуляркой длину входного потока
     input_str = input_str.replace(input_len, "", 1)  # Убираем длину вхожного потока из входной строки
-    input_buffer: list[int | str] = [int(input_len)] + list(input_str)  # Помещаем во входной буффер его длину + содержание  # noqa: RUF005
+    input_buffer: list[int | str] = [int(input_len)] + list(  # noqa: RUF005
+        input_str
+    )  # Помещаем во входной буффер его длину + содержание
     alu = ALU()
     address_decoder = AddressDecoder(mem, input_buffer)
     comp = ACCopm(alu, address_decoder)

@@ -167,7 +167,7 @@ asm | acc | neum | mc -> hw | tick -> instr | struct | stream | mem | pstr | pro
 ## Транслятор
 ### Интерфейс командной строки:
 `Translator.py <input_file> <output_file>`\
-[Translator.py](impl/Translator.py)
+[Translator.py](Translator.py)
 
 ### Этапы трансляции
 + Считывание данных из файла
@@ -193,7 +193,7 @@ E    -> to stderr
 ## Процессор
 ### Интерфейс командной строки
 `Machine.py <code_file> <input_stream_file> <logs_file>`\
-[Machine.py](impl/Machine.py)
+[Machine.py](Machine.py)
 
 ### Datapath
 ![img.png](resources/proc.png)

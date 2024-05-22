@@ -157,5 +157,5 @@ commands = {
     "jne": OpCode.JNE,
     "jg": OpCode.JG,
     "jl": OpCode.JL,
-    "hlt": OpCode.HLT
+    "hlt": OpCode.HLT,
 }
