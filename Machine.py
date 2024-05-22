@@ -452,7 +452,7 @@ class ControlUnit:
                f"DR: {self.comp.DR}; SP: {self.comp.SP}; CR: {self.comp.CR}; IP: {self.comp.IP}; "
                f"AR: {self.comp.AR}; N: {self.comp.alu.N}; Z: {self.comp.alu.Z}")
         logging.debug(log)
-        # self.f.write(log + "\n")
+        self.f.write(log + "\n")
         self.ticks_counter += 1
 
 

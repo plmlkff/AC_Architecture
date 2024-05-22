@@ -51,6 +51,7 @@ def parse_addressing_type(word: str):
 
 # Переводим лексемы в команды и помещаем в стек памяти
 def lexemes_to_commands(lexemes: list[Lexeme]):
+    global start_address
     memory_stack: list[int | Command] = [0] * 1024
     is_address_changed = False
     is_word_value = False
