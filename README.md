@@ -8,15 +8,15 @@ asm | acc | neum | mc -> hw | tick -> instr | struct | stream | mem | pstr | pro
 ```ebnf
 <program> ::= single_line |  single_line "\n" program
 
-<single_line> ::= label + command_line | comand_line
+<single_line> ::= label command_line | comand_line
 
-<label> ::= label_name + ":(\s | \n)"
+<label> ::= label_name ":(\s | \n)"
 
 <label_name> ::= <any of "a-z A-Z _"> | start_section
 
-<start_section> ::= "START:" + ("\s" | "\n")
+<start_section> ::= "START:" ("\s" | "\n")
 
-<command_line> ::= op_code address?  comment?
+<command_line> ::= op_code | op_code address | op_code address comment
 
 
 
@@ -42,21 +42,21 @@ asm | acc | neum | mc -> hw | tick -> instr | struct | stream | mem | pstr | pro
    
 <address> ::= integer
             | label
-            | "#" + integer
-            | "#" + label
+            | "#"integer
+            | "#"label
             | ("+" | "-") integer
             | ("+" | "-") label
-            | "[" + integer + "]"
-            | "[" + label + "]"
-            | "[" + ("+" | "-") integer + "]"
-            | "[" + ("+" | "-") label + "]"
+            | "["  integer "]"
+            | "[" label "]"
+            | "[" ("+" | "-") integer "]"
+            | "[" ("+" | "-") label "]"
             | character
             
-<comment> ::= ";" + <any of "a-zA-Z0-9">
+<comment> ::= ";" <any of "a-zA-Z0-9">
             
 <integer> ::= <any of "0-9">
 
-<character> ::= "'" + "a-zA-Z0-9" + "'"
+<character> ::= "'" "a-zA-Z0-9" "'"
 
 ```
 ### Семантика
