@@ -1,0 +1,147 @@
+in_source: |
+  HELLO: word 'h'
+      word 'e'
+      word 'l'
+      word 'l'
+      word 'o'
+      word ','
+      word ' '
+  HELLO_LEN: word 7
+  EXCLAMATION: word '!'
+  WIYN: word 'W' ; What is your name?\n
+      word 'h'
+      word 'a'
+      word 't'
+      word ' '
+      word 'i'
+      word 's'
+      word ' '
+      word 'y'
+      word 'o'
+      word 'u'
+      word 'r'
+      word ' '
+      word 'n'
+      word 'a'
+      word 'm'
+      word 'e'
+      word '?'
+      word 10 ; '\n'
+  WIYN_LEN: word 19
+  NAME_LEN: word 0
+  WIYN_PTR: word WIYN
+  WIYN_END: word 0
+  HELLO_PTR: word HELLO
+  HELLO_END: word 0
+  START:
+      ld WIYN_PTR
+      add WIYN_LEN
+      wr WIYN_END
+  wiyn_loop:
+      ld [WIYN_PTR]
+      wr 1022
+      ld WIYN_PTR
+      add #1
+      cmp WIYN_END
+      je #name
+      wr WIYN_PTR
+      jmp #wiyn_loop
+  name:
+      ld 1023
+      wr NAME_LEN
+      cmp #0
+      je #hello
+      add #BUFF
+      wr BUFF_END
+  read_name_loop:
+      ld 1023
+      wr [BUFF_PTR]
+      ld BUFF_PTR
+      add #1
+      cmp BUFF_END
+      je #hello
+      wr BUFF_PTR
+      jmp #read_name_loop
+  hello:
+      ld #BUFF
+      wr BUFF_PTR
+      ld HELLO_PTR
+      add HELLO_LEN
+      wr HELLO_END
+  hello_loop:
+      ld [HELLO_PTR]
+      wr 1022
+      ld HELLO_PTR
+      add #1
+      cmp HELLO_END
+      je #print_name_loop
+      wr HELLO_PTR
+      jmp #hello_loop
+  print_name_loop:
+      ld [BUFF_PTR]
+      wr 1022
+      ld BUFF_PTR
+      add #1
+      cmp BUFF_END
+      je #print_exclamation
+      wr BUFF_PTR
+      jmp #print_name_loop
+  print_exclamation:
+      ld EXCLAMATION
+      wr 1022
+  end:
+      hlt
+  org 100
+  BUFF_END: word 0
+  BUFF_PTR: word BUFF
+  BUFF: word 0
+in_stdin: |-
+  4User
+out_code: |-
+  [104, 101, 108, 108, 111, 44, 32, 7, 33, 87, 104, 97, 116, 32, 105, 115, 32, 121, 111, 117, 114, 32, 110, 97, 109, 101, 63, 10, 19, 0, 9, 0, 0, 0, {"name": "ld", "op_code": "LD", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": true, "address": 30}, {"name": "add", "op_code": "ADD", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 28}, {"name": "wr", "op_code": "WR", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 31}, {"name": "ld", "op_code": "LD", "addressing_type": "INDIRECT_STRAIGHT", "is_start": false, "address": 30}, {"name": "wr", "op_code": "WR", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 1022}, {"name": "ld", "op_code": "LD", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 30}, {"name": "add", "op_code": "ADD", "addressing_type": "DIRECT_LOAD", "is_start": false, "address": 1}, {"name": "cmp", "op_code": "CMP", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 31}, {"name": "je", "op_code": "JE", "addressing_type": "DIRECT_LOAD", "is_start": false, "address": 45}, {"name": "wr", "op_code": "WR", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 30}, {"name": "jmp", "op_code": "JMP", "addressing_type": "DIRECT_LOAD", "is_start": false, "address": 37}, {"name": "ld", "op_code": "LD", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 1023}, {"name": "wr", "op_code": "WR", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 29}, {"name": "cmp", "op_code": "CMP", "addressing_type": "DIRECT_LOAD", "is_start": false, "address": 0}, {"name": "je", "op_code": "JE", "addressing_type": "DIRECT_LOAD", "is_start": false, "address": 59}, {"name": "add", "op_code": "ADD", "addressing_type": "DIRECT_LOAD", "is_start": false, "address": 102}, {"name": "wr", "op_code": "WR", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 100}, {"name": "ld", "op_code": "LD", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 1023}, {"name": "wr", "op_code": "WR", "addressing_type": "INDIRECT_STRAIGHT", "is_start": false, "address": 101}, {"name": "ld", "op_code": "LD", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 101}, {"name": "add", "op_code": "ADD", "addressing_type": "DIRECT_LOAD", "is_start": false, "address": 1}, {"name": "cmp", "op_code": "CMP", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 100}, {"name": "je", "op_code": "JE", "addressing_type": "DIRECT_LOAD", "is_start": false, "address": 59}, {"name": "wr", "op_code": "WR", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 101}, {"name": "jmp", "op_code": "JMP", "addressing_type": "DIRECT_LOAD", "is_start": false, "address": 51}, {"name": "ld", "op_code": "LD", "addressing_type": "DIRECT_LOAD", "is_start": false, "address": 102}, {"name": "wr", "op_code": "WR", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 101}, {"name": "ld", "op_code": "LD", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 32}, {"name": "add", "op_code": "ADD", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 7}, {"name": "wr", "op_code": "WR", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 33}, {"name": "ld", "op_code": "LD", "addressing_type": "INDIRECT_STRAIGHT", "is_start": false, "address": 32}, {"name": "wr", "op_code": "WR", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 1022}, {"name": "ld", "op_code": "LD", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 32}, {"name": "add", "op_code": "ADD", "addressing_type": "DIRECT_LOAD", "is_start": false, "address": 1}, {"name": "cmp", "op_code": "CMP", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 33}, {"name": "je", "op_code": "JE", "addressing_type": "DIRECT_LOAD", "is_start": false, "address": 72}, {"name": "wr", "op_code": "WR", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 32}, {"name": "jmp", "op_code": "JMP", "addressing_type": "DIRECT_LOAD", "is_start": false, "address": 64}, {"name": "ld", "op_code": "LD", "addressing_type": "INDIRECT_STRAIGHT", "is_start": false, "address": 101}, {"name": "wr", "op_code": "WR", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 1022}, {"name": "ld", "op_code": "LD", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 101}, {"name": "add", "op_code": "ADD", "addressing_type": "DIRECT_LOAD", "is_start": false, "address": 1}, {"name": "cmp", "op_code": "CMP", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 100}, {"name": "je", "op_code": "JE", "addressing_type": "DIRECT_LOAD", "is_start": false, "address": 80}, {"name": "wr", "op_code": "WR", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 101}, {"name": "jmp", "op_code": "JMP", "addressing_type": "DIRECT_LOAD", "is_start": false, "address": 72}, {"name": "ld", "op_code": "LD", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 8}, {"name": "wr", "op_code": "WR", "addressing_type": "ABSOLUTE_STRAIGHT", "is_start": false, "address": 1022}, {"name": "hlt", "op_code": "HLT", "addressing_type": "NO_ADDRESS", "is_start": false, "address": 0}, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 102, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+out_stdout: |
+  code.o
+  ============================================================
+  What is your name?
+  hello, User!
+  Ticks count: 9074
+out_log: |
+  DEBUG   Machine:tick_log      Tick #9036: MEMORY ACCESS TICK mIP: 26; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9037: MEMORY ACCESS TICK mIP: 26; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9038: MEMORY ACCESS TICK mIP: 26; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9039: MEMORY ACCESS TICK mIP: 26; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9040: MEMORY ACCESS TICK mIP: 26; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9041: MEMORY ACCESS TICK mIP: 26; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9042: MEMORY ACCESS TICK mIP: 26; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9043: MEMORY ACCESS TICK mIP: 26; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9044: MEMORY ACCESS TICK mIP: 26; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9045: MEMORY ACCESS TICK mIP: 26; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9046: MEMORY ACCESS TICK mIP: 26; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9047: MEMORY ACCESS TICK mIP: 26; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9048: MEMORY ACCESS TICK mIP: 26; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9049: MEMORY ACCESS TICK mIP: 26; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9050: MEMORY ACCESS TICK mIP: 26; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9051: MEMORY ACCESS TICK mIP: 26; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9052: MEMORY ACCESS TICK mIP: 26; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9053: MEMORY ACCESS TICK mIP: 26; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9054: MEMORY ACCESS TICK mIP: 26; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9055: MEMORY ACCESS TICK mIP: 26; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9056:  mIP: 27; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9057:  mIP: 69; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 81; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9058:  mIP: 70; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 82; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9059:  mIP: 0; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 82; AR: 1022; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9060:  mIP: 1; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 82; AR: 82; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9061: MEMORY ACCESS TICK mIP: 1; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 82; AR: 82; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9062: MEMORY ACCESS TICK mIP: 1; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 82; AR: 82; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9063: MEMORY ACCESS TICK mIP: 1; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 82; AR: 82; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9064: MEMORY ACCESS TICK mIP: 1; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 82; AR: 82; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9065: MEMORY ACCESS TICK mIP: 1; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 82; AR: 82; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9066: MEMORY ACCESS TICK mIP: 1; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 82; AR: 82; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9067: MEMORY ACCESS TICK mIP: 1; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 82; AR: 82; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9068: MEMORY ACCESS TICK mIP: 1; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 82; AR: 82; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9069: MEMORY ACCESS TICK mIP: 1; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 82; AR: 82; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9070: MEMORY ACCESS TICK mIP: 1; AC: 33; BR: 0; DR: 33; SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 82; AR: 82; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9071:  mIP: 2; AC: 33; BR: 0; DR: Command(name='hlt', op_code=<OpCode.HLT: 68>, addressing_type=<AddressingType.NO_ADDRESS: 5>, is_start=False, address=0); SP: -3; CR: Command(name='wr', op_code=<OpCode.WR: 26>, addressing_type=<AddressingType.ABSOLUTE_STRAIGHT: 0>, is_start=False, address=1022); IP: 82; AR: 82; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9072:  mIP: 3; AC: 33; BR: 0; DR: Command(name='hlt', op_code=<OpCode.HLT: 68>, addressing_type=<AddressingType.NO_ADDRESS: 5>, is_start=False, address=0); SP: -3; CR: Command(name='hlt', op_code=<OpCode.HLT: 68>, addressing_type=<AddressingType.NO_ADDRESS: 5>, is_start=False, address=0); IP: 82; AR: 82; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9073:  mIP: 19; AC: 33; BR: 0; DR: Command(name='hlt', op_code=<OpCode.HLT: 68>, addressing_type=<AddressingType.NO_ADDRESS: 5>, is_start=False, address=0); SP: -3; CR: Command(name='hlt', op_code=<OpCode.HLT: 68>, addressing_type=<AddressingType.NO_ADDRESS: 5>, is_start=False, address=0); IP: 82; AR: 82; N: False; Z: True
+  DEBUG   Machine:tick_log      Tick #9074:  mIP: 68; AC: 33; BR: 0; DR: Command(name='hlt', op_code=<OpCode.HLT: 68>, addressing_type=<AddressingType.NO_ADDRESS: 5>, is_start=False, address=0); SP: -3; CR: Command(name='hlt', op_code=<OpCode.HLT: 68>, addressing_type=<AddressingType.NO_ADDRESS: 5>, is_start=False, address=0); IP: 82; AR: 82; N: False; Z: True

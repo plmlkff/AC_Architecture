@@ -48,6 +48,8 @@ asm | acc | neum | mc -> hw | tick -> instr | struct | stream | mem | pstr | pro
             | "[" + ("+" | "-") label + "]"
             | character
             
+<comment> ::= ";" + <any of "a-zA-Z0-9">
+            
 <integer> ::= { <any of "0-9"> }
 
 <character> ::= "'" + "a-zA-Z0-9" + "'"
@@ -256,7 +258,7 @@ E    -> to stderr
 + Политика вытеснения: случайная
 + Политика записи: write-through
 ![AddressDecoder.png](AddressDecoder.png)
-
++ 
 Показатели работы кэша на алгоритме `prob1`, сумма делителей от 1 до 99(доступ к памяти – 10 тактов, к кэшу – 1):
 
 | Кол-во линий | Кол-во тактов |

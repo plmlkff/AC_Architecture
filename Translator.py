@@ -89,8 +89,8 @@ def replace_marks_and_chars(lines: list[str]):
     lines = "\n".join(lines)
     lines = lines.replace(":\n", ":")
     for line in lines.split("\n"):
-        if len(re.findall(r"\".\"", line)) == 1:  # Замена литералов
-            val = re.findall(r"\".\"", line)[0]
+        if len(re.findall(r"\'.\'", line)) == 1:  # Замена литералов
+            val = re.findall(r"\'.\'", line)[0]
             lines = lines.replace(val, str(ord(val[1: len(val) - 1])), 1)
         if len(re.findall(r"\s?org\s", line)) == 1:  # Поиск и подстановка переходов по памяти
             address = int(re.findall(r"\d+", line)[0])
