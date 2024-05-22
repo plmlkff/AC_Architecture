@@ -6,8 +6,7 @@ import re
 import sys
 from io import TextIOWrapper
 from random import randint
-
-from BasicTypes import AddressingType, Command, MicroCommand, MicroInstruction, OpCode, dictToCommand
+from impl.BasicTypes import AddressingType, Command, MicroCommand, MicroInstruction, OpCode, dictToCommand
 
 
 class ALU:
@@ -335,7 +334,7 @@ class ControlUnit:
                                  MicroInstruction.LATCH_IP]),  # 66: DR -> IP
             MicroCommand(True, [MicroInstruction.JUMP], self.INSTR_FETCH),  # 67: 0 -> mIP
             # hlt
-            MicroCommand(True, [MicroInstruction.HLT]),  # 68: stop machine
+            MicroCommand(True, [MicroInstruction.HLT]),  # 68: stop impl
             # Post-execution
             MicroCommand(False, [MicroInstruction.LOAD_IP, MicroInstruction.SUM,
                                  MicroInstruction.INC, MicroInstruction.LATCH_IP]),  # 69: IP + 1 -> IP

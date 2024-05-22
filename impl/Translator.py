@@ -7,7 +7,7 @@ import sys
 from dataclasses import dataclass
 from enum import Enum
 
-from BasicTypes import AddressingType, Command, CommandEncoder, commands
+from impl.BasicTypes import AddressingType, Command, CommandEncoder, commands
 
 """
 Грамматика автомата
