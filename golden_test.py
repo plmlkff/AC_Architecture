@@ -28,9 +28,8 @@ def test_translator_and_machine(golden, caplog):
             print("============================================================")
             Machine.main(target, input_stream, output)
 
-        with open(target, mode="r") as f:
+        with open(target) as f:
             code = f.read()
-            # code = str(code, encoding="utf-8")
 
         assert code == golden.out["out_code"]
         assert stdout.getvalue() == golden.out["out_stdout"]

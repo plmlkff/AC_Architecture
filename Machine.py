@@ -1,11 +1,13 @@
+from __future__ import annotations
+
 import json
 import logging
 import re
 import sys
 from io import TextIOWrapper
-
-from BasicTypes import Command, MicroCommand, MicroInstruction, AddressingType, dictToCommand, OpCode
 from random import randint
+
+from BasicTypes import AddressingType, Command, MicroCommand, MicroInstruction, OpCode, dictToCommand
 
 
 class ALU:
@@ -71,22 +73,22 @@ class AddressDecoder:
             address = self.MEM_SIZE + address
         if address == self.INPUT_MAPPED:
             if len(self.input_buffer) == 0:
-                raise Exception('Buffer is empty!')
+                raise Exception("Buffer is empty!")
             for i in range(self.MEMORY_ACCESS_TIME):
-                tick_log_callback('MEMORY ACCESS TICK')
+                tick_log_callback("MEMORY ACCESS TICK")
             stream_val = self.input_buffer.pop(0)
             return stream_val if isinstance(stream_val, int) else ord(stream_val)
         if address in self.cache:
-            tick_log_callback('CACHE ACCESS TICK')
+            tick_log_callback("CACHE ACCESS TICK")
             return self.cache[address]
         else:
             if len(self.cache) == self.CACHE_LINES_COUNT and self.CACHE_LINES_COUNT != 0:
-                tick_log_callback('CACHE DELETE TICK')
+                tick_log_callback("CACHE DELETE TICK")
                 del self.cache[list(self.cache.keys())[randint(0, self.CACHE_LINES_COUNT - 1)]]
             if self.CACHE_LINES_COUNT != 0:
                 self.cache[address] = self.mem[address]
             for i in range(self.MEMORY_ACCESS_TIME):
-                tick_log_callback('MEMORY ACCESS TICK')
+                tick_log_callback("MEMORY ACCESS TICK")
             return self.mem[address]
 
     def set(self, address: int, value: int | Command, tick_log_callback):
@@ -94,13 +96,13 @@ class AddressDecoder:
             address = self.MEM_SIZE + address
         if address == self.OUTPUT_MAPPED:
             for i in range(self.MEMORY_ACCESS_TIME):
-                tick_log_callback('MEMORY ACCESS TICK')
+                tick_log_callback("MEMORY ACCESS TICK")
             self.output_buffer.append(chr(value))
         if address in self.cache:
-            tick_log_callback('CACHE WRITE TICK')
+            tick_log_callback("CACHE WRITE TICK")
             self.cache[address] = value
         for i in range(self.MEMORY_ACCESS_TIME):
-            tick_log_callback('MEMORY ACCESS TICK')
+            tick_log_callback("MEMORY ACCESS TICK")
         self.mem[address] = value
 
 
@@ -112,7 +114,7 @@ class ACCopm:
     AC: int = 0
     BR: int | Command = 0
     DR: int | Command = 0
-    CR: int | Command = Command('nope', OpCode.NOPE)
+    CR: int | Command = Command("nope", OpCode.NOPE)
     SP: int | Command = -3
     IP: int | Command = 0
     AR: int = 0
@@ -357,19 +359,19 @@ class ControlUnit:
                 if addr_type == AddressingType.ABSOLUTE_STRAIGHT:
                     self.mIP += 1
                     return True
-                elif addr_type == AddressingType.STRAIGHT_RELATIVE:
+                if addr_type == AddressingType.STRAIGHT_RELATIVE:
                     self.mIP = 6
                     return True
-                elif addr_type == AddressingType.INDIRECT_STRAIGHT:
+                if addr_type == AddressingType.INDIRECT_STRAIGHT:
                     self.mIP = 9
                     return True
-                elif addr_type == AddressingType.STACK_RELATIVE:
+                if addr_type == AddressingType.STACK_RELATIVE:
                     self.mIP = 13
                     return True
-                elif addr_type == AddressingType.DIRECT_LOAD:
+                if addr_type == AddressingType.DIRECT_LOAD:
                     self.mIP = 16
                     return True
-                elif addr_type == AddressingType.NO_ADDRESS:
+                if addr_type == AddressingType.NO_ADDRESS:
                     self.mIP = 18
             if MicroInstruction.JUMP in mc.signals:
                 self.mIP = mc.value
@@ -444,12 +446,12 @@ class ControlUnit:
         self.mIP += 1
         return True
 
-    def tick_log(self, info: str = ''):
-        log = (f'Tick #{self.ticks_counter}: {info} mIP: {self.mIP}; AC: {self.comp.AC}; BR: {self.comp.BR}; '
-               f'DR: {self.comp.DR}; SP: {self.comp.SP}; CR: {self.comp.CR}; IP: {self.comp.IP}; '
-               f'AR: {self.comp.AR}; N: {self.comp.alu.N}; Z: {self.comp.alu.Z}')
+    def tick_log(self, info: str = ""):
+        log = (f"Tick #{self.ticks_counter}: {info} mIP: {self.mIP}; AC: {self.comp.AC}; BR: {self.comp.BR}; "
+               f"DR: {self.comp.DR}; SP: {self.comp.SP}; CR: {self.comp.CR}; IP: {self.comp.IP}; "
+               f"AR: {self.comp.AR}; N: {self.comp.alu.N}; Z: {self.comp.alu.Z}")
         logging.debug(log)
-        self.f.write(log+'\n')
+        self.f.write(log + "\n")
         self.ticks_counter += 1
 
 
@@ -462,20 +464,20 @@ def check_start(mem: list[Command | int]):
 
 def main(code, input_stream, output):
     logging.getLogger().setLevel(logging.DEBUG)
-    mem = json.load(open(code, 'r'), object_hook=dictToCommand)
-    input_str = open(input_stream, 'r').read()  # Считываем файл в строку
-    input_len = re.findall(r'^\d+(?=[^\d])', input_str)[0]  # Парсим регуляркой длину входного потока
-    input_str = input_str.replace(input_len, '', 1)  # Убираем длину вхожного потока из входной строки
+    mem = json.load(open(code), object_hook=dictToCommand)
+    input_str = open(input_stream).read()  # Считываем файл в строку
+    input_len = re.findall(r"^\d+(?=[^\d])", input_str)[0]  # Парсим регуляркой длину входного потока
+    input_str = input_str.replace(input_len, "", 1)  # Убираем длину вхожного потока из входной строки
     input: list[int | str] = [int(input_len)] + list(input_str)  # Помещаем во входной буффер его длину + содержание
     alu = ALU()
     address_decoder = AddressDecoder(mem, input)
     comp = ACCopm(alu, address_decoder)
     comp.IP = check_start(mem)
-    with open(output, 'w') as f:
+    with open(output, "w") as f:
         cu = ControlUnit(comp, f)
         cu.start()
-    print(''.join(address_decoder.output_buffer))
-    print(f'Ticks count: {cu.ticks_counter-1}')
+    print("".join(address_decoder.output_buffer))
+    print(f"Ticks count: {cu.ticks_counter - 1}")
 
 
 if __name__ == "__main__":

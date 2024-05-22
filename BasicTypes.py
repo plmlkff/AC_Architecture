@@ -1,6 +1,6 @@
-from enum import Enum
-from dataclasses import dataclass
 import json
+from dataclasses import dataclass
+from enum import Enum
 
 
 class OpCode(Enum):
@@ -70,10 +70,10 @@ class CommandEncoder(json.JSONEncoder):
 
 def dictToCommand(dict):
     if isinstance(dict, int): return dict
-    command = Command(dict['name'], OpCode[dict['op_code']])
-    command.addressing_type = AddressingType[dict['addressing_type']]
-    command.address = int(dict['address'])
-    command.is_start = bool(dict['is_start'])
+    command = Command(dict["name"], OpCode[dict["op_code"]])
+    command.addressing_type = AddressingType[dict["addressing_type"]]
+    command.address = int(dict["address"])
+    command.is_start = bool(dict["is_start"])
     return command
 
 
@@ -138,21 +138,21 @@ class MicroCommand:
 
 
 commands = {
-    'nope': OpCode.NOPE,
-    'add': OpCode.ADD,
-    'sub': OpCode.SUB,
-    'ld': OpCode.LD,
-    'wr': OpCode.WR,
-    'push': OpCode.PUSH,
-    'pop': OpCode.POP,
-    'swap': OpCode.SWAP,
-    'call': OpCode.CALL,
-    'ret': OpCode.RET,
-    'cmp': OpCode.CMP,
-    'jmp': OpCode.JMP,
-    'je': OpCode.JE,
-    'jne': OpCode.JNE,
-    'jg': OpCode.JG,
-    'jl': OpCode.JL,
-    'hlt': OpCode.HLT
+    "nope": OpCode.NOPE,
+    "add": OpCode.ADD,
+    "sub": OpCode.SUB,
+    "ld": OpCode.LD,
+    "wr": OpCode.WR,
+    "push": OpCode.PUSH,
+    "pop": OpCode.POP,
+    "swap": OpCode.SWAP,
+    "call": OpCode.CALL,
+    "ret": OpCode.RET,
+    "cmp": OpCode.CMP,
+    "jmp": OpCode.JMP,
+    "je": OpCode.JE,
+    "jne": OpCode.JNE,
+    "jg": OpCode.JG,
+    "jl": OpCode.JL,
+    "hlt": OpCode.HLT
 }
