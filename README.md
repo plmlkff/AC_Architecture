@@ -6,7 +6,11 @@ asm | acc | neum | mc -> hw | tick -> instr | struct | stream | mem | pstr | pro
 ## Язык программирования ASM
 ### Синтаксис
 ```ebnf
-<label> ::= label_name + ":(\s | \n)" + command_line
+<program> ::= single_line |  single_line "\n" program
+
+<single_line> ::= label + command_line | comand_line
+
+<label> ::= label_name + ":(\s | \n)"
 
 <label_name> ::= <any of "a-z A-Z _"> | start_section
 
@@ -50,7 +54,7 @@ asm | acc | neum | mc -> hw | tick -> instr | struct | stream | mem | pstr | pro
             
 <comment> ::= ";" + <any of "a-zA-Z0-9">
             
-<integer> ::= { <any of "0-9"> }
+<integer> ::= <any of "0-9">
 
 <character> ::= "'" + "a-zA-Z0-9" + "'"
 

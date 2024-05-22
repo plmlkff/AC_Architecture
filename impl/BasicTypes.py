@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 from dataclasses import dataclass
 from enum import Enum
@@ -61,19 +63,20 @@ class CommandEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Command):
             return obj.__dict__
-        elif isinstance(obj, OpCode):
+        if isinstance(obj, OpCode):
             return obj.__str__()
-        elif isinstance(obj, AddressingType):
+        if isinstance(obj, AddressingType):
             return obj.__str__()
         return json.JSONEncoder.default(self, obj)
 
 
-def dictToCommand(dict):
-    if isinstance(dict, int): return dict
-    command = Command(dict["name"], OpCode[dict["op_code"]])
-    command.addressing_type = AddressingType[dict["addressing_type"]]
-    command.address = int(dict["address"])
-    command.is_start = bool(dict["is_start"])
+def dict_to_command(dictionary):
+    if isinstance(dictionary, int):
+        return dictionary
+    command = Command(dictionary["name"], OpCode[dictionary["op_code"]])
+    command.addressing_type = AddressingType[dictionary["addressing_type"]]
+    command.address = int(dictionary["address"])
+    command.is_start = bool(dictionary["is_start"])
     return command
 
 

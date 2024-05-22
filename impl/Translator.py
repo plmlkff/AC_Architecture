@@ -19,7 +19,7 @@ E    -> to stderr
 
 mrk_pattern = re.compile(r"^[a-zA-Z_]+:")
 mnc_pattern = re.compile(r"^[a-zA-Z]+$")
-addr_pattern = re.compile(r"^[\[\+\-#]?[\+\-]?\d+\]?$")
+addr_pattern = re.compile(r"^[\[+\-#]?[+\-]?\d+]?$")
 start_address = 0
 
 
@@ -41,16 +41,15 @@ def parse_addressing_type(word: str):
         if word[1] == "+" or word[1] == "-":
             return AddressingType.STACK_RELATIVE
         return AddressingType.INDIRECT_STRAIGHT
-    elif word[0] == "#":
+    if word[0] == "#":
         return AddressingType.DIRECT_LOAD
-    else:
-        if word[0] == "+" or word[0] == "-":
-            return AddressingType.STRAIGHT_RELATIVE
-        return AddressingType.ABSOLUTE_STRAIGHT
+    if word[0] == "+" or word[0] == "-":
+        return AddressingType.STRAIGHT_RELATIVE
+    return AddressingType.ABSOLUTE_STRAIGHT
 
 
 # Переводим лексемы в команды и помещаем в стек памяти
-def lexemes_to_commands(lexemes: list[Lexeme]):
+def lexemes_to_commands(lexemes: list[Lexeme]):  # noqa: C901
     global start_address
     memory_stack: list[int | Command] = [0] * 1024
     is_address_changed = False
@@ -103,7 +102,7 @@ def replace_marks_and_chars(lines: list[str]):
         if mark == "START:":  # Запоминаем адрес стартовой метки
             start_address = address
         lines = re.sub(rf"\b{mark}", "", lines)
-        lines = re.sub(rf"(?<=[\+\-\[\#\b ]){mark[0:len(mark) - 1]}\b", str(address), lines)
+        lines = re.sub(rf"(?<=[+\-\[#\b ]){mark[0:len(mark) - 1]}\b", str(address), lines)
         address += 1
     return lines
 
@@ -113,17 +112,16 @@ def get_expected_lexeme_name(state: MachineState):
         return "mark or address"
     if state == MachineState.MNC:
         return "address or mnemonic or mark"
-    if state == MachineState.ADDR:
-        return "mark or mnemonic"
+    return "mark or mnemonic"
 
 
-def state_S(word: str):
+def state_s(word: str):
     if len(mnc_pattern.findall(word)) != 0:
         return Lexeme(word.lower(), MachineState.MNC)
     return Lexeme(word, MachineState.E)
 
 
-def state_MNC(word: str):
+def state_mnc(word: str):
     if len(addr_pattern.findall(word)) != 0:
         return Lexeme(word, MachineState.ADDR)
     if len(mnc_pattern.findall(word)) != 0:
@@ -131,16 +129,16 @@ def state_MNC(word: str):
     return Lexeme(word, MachineState.E)
 
 
-def state_ADDR(word: str):
+def state_addr(word: str):
     if len(mnc_pattern.findall(word)) != 0:
         return Lexeme(word.lower(), MachineState.MNC)
     return Lexeme(word, MachineState.E)
 
 
 def scan_lexemes(lines: str):
-    current_state = MachineState.S
+    current_state: MachineState = MachineState.S
     words = lines.split()
-    transition_matrix = [state_S, state_MNC, state_ADDR]
+    transition_matrix = [state_s, state_mnc, state_addr]
     lexemes = []
     for word in words:
         lexeme = transition_matrix[current_state.value](word)
@@ -167,14 +165,14 @@ def read_file(input_name: str):
     return data
 
 
-def main(input_file_name, output_file_name):
-    lines = read_file(input_file_name)
+def main(if_name, of_name):
+    lines = read_file(if_name)
     lines = remove_comments(lines)
     lines = replace_marks_and_chars(lines)
     lexemes = scan_lexemes("".join(lines))
     stack = lexemes_to_commands(lexemes)
-    json.dump(stack, open(output_file_name, "w"), cls=CommandEncoder)
-    head, tail = os.path.split(output_file_name)
+    json.dump(stack, open(of_name, "w"), cls=CommandEncoder)
+    head, tail = os.path.split(of_name)
     print(tail)
 
 

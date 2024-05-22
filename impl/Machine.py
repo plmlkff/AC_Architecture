@@ -6,7 +6,8 @@ import re
 import sys
 from io import TextIOWrapper
 from random import randint
-from impl.BasicTypes import AddressingType, Command, MicroCommand, MicroInstruction, OpCode, dictToCommand
+
+from impl.BasicTypes import AddressingType, Command, MicroCommand, MicroInstruction, OpCode, dict_to_command
 
 
 class ALU:
@@ -17,36 +18,44 @@ class ALU:
     out_bus: int | Command = 0
 
     def invert_left(self):
-        if isinstance(self.left_bus, Command): self.left_bus = self.left_bus.op_code.value
+        if isinstance(self.left_bus, Command):
+            self.left_bus = self.left_bus.op_code.value
         self.left_bus = ~self.left_bus
 
     def invert_right(self):
-        if isinstance(self.right_bus, Command): self.right_bus = self.right_bus.op_code.value
+        if isinstance(self.right_bus, Command):
+            self.right_bus = self.right_bus.op_code.value
         self.right_bus = ~self.right_bus
 
     def sum(self):
         if self.left_bus == 0 or self.right_bus == 0:
             self.out_bus = self.left_bus if self.left_bus != 0 else self.right_bus
         else:
-            if isinstance(self.left_bus, Command): self.left_bus = self.left_bus.op_code.value
-            if isinstance(self.right_bus, Command): self.right_bus = self.right_bus.op_code.value
+            if isinstance(self.left_bus, Command):
+                self.left_bus = self.left_bus.op_code.value
+            if isinstance(self.right_bus, Command):
+                self.right_bus = self.right_bus.op_code.value
             self.out_bus = self.right_bus + self.left_bus
         self.left_bus = 0
         self.right_bus = 0
 
     def and_(self):
-        if isinstance(self.left_bus, Command): self.left_bus = self.left_bus.op_code.value
-        if isinstance(self.right_bus, Command): self.right_bus = self.right_bus.op_code.value
+        if isinstance(self.left_bus, Command):
+            self.left_bus = self.left_bus.op_code.value
+        if isinstance(self.right_bus, Command):
+            self.right_bus = self.right_bus.op_code.value
         self.out_bus = self.right_bus & self.left_bus
         self.left_bus = 0
         self.right_bus = 0
 
     def inc(self):
-        if isinstance(self.out_bus, Command): self.out_bus = self.out_bus.op_code.value
+        if isinstance(self.out_bus, Command):
+            self.out_bus = self.out_bus.op_code.value
         self.out_bus = self.out_bus + 1
 
-    def set_NZ(self):
-        if isinstance(self.out_bus, Command): self.out_bus = self.out_bus.op_code.value
+    def set_nz(self):
+        if isinstance(self.out_bus, Command):
+            self.out_bus = self.out_bus.op_code.value
         self.N = self.out_bus < 0
         self.Z = self.out_bus == 0
 
@@ -57,9 +66,9 @@ class AddressDecoder:
     INPUT_MAPPED: int = 1023
     OUTPUT_MAPPED: int = 1022
     MEM_SIZE = 1024
-    input_buffer: list[int | str] = []
-    output_buffer: list[str] = []
-    mem: list[int | Command] = []
+    input_buffer: list[int | str] = []  # noqa: RUF012
+    output_buffer: list[str] = []  # noqa: RUF012
+    mem: list[int | Command] = []  # noqa: RUF012
     cache: {int: Command | int}
 
     def __init__(self, mem, input_buffer):
@@ -68,12 +77,12 @@ class AddressDecoder:
         self.input_buffer = input_buffer
         self.output_buffer = []
 
-    def get(self, address: int, tick_log_callback):
+    def get(self, address: int, tick_log_callback):  # noqa: C901
         if address < 0:
             address = self.MEM_SIZE + address
         if address == self.INPUT_MAPPED:
             if len(self.input_buffer) == 0:
-                raise Exception("Buffer is empty!")
+                raise Exception("Buffer is empty!")  # noqa: TRY002, TRY003
             for i in range(self.MEMORY_ACCESS_TIME):
                 tick_log_callback("MEMORY ACCESS TICK")
             stream_val = self.input_buffer.pop(0)
@@ -81,15 +90,14 @@ class AddressDecoder:
         if address in self.cache:
             tick_log_callback("CACHE ACCESS TICK")
             return self.cache[address]
-        else:
-            if len(self.cache) == self.CACHE_LINES_COUNT and self.CACHE_LINES_COUNT != 0:
-                tick_log_callback("CACHE DELETE TICK")
-                del self.cache[list(self.cache.keys())[randint(0, self.CACHE_LINES_COUNT - 1)]]
-            if self.CACHE_LINES_COUNT != 0:
-                self.cache[address] = self.mem[address]
-            for i in range(self.MEMORY_ACCESS_TIME):
-                tick_log_callback("MEMORY ACCESS TICK")
-            return self.mem[address]
+        if len(self.cache) == self.CACHE_LINES_COUNT and self.CACHE_LINES_COUNT != 0:
+            tick_log_callback("CACHE DELETE TICK")
+            del self.cache[list(self.cache.keys())[randint(0, self.CACHE_LINES_COUNT - 1)]]
+        if self.CACHE_LINES_COUNT != 0:
+            self.cache[address] = self.mem[address]
+        for i in range(self.MEMORY_ACCESS_TIME):
+            tick_log_callback("MEMORY ACCESS TICK")
+        return self.mem[address]
 
     def set(self, address: int, value: int | Command, tick_log_callback):
         if address < 0:
@@ -123,33 +131,36 @@ class ACCopm:
         self.alu = alu
         self.address_decoder = address_decoder
 
-    def latch_AC(self):
-        if isinstance(self.alu.out_bus, Command): self.alu.out_bus = self.alu.out_bus.op_code.value
+    def latch_ac(self):
+        if isinstance(self.alu.out_bus, Command):
+            self.alu.out_bus = self.alu.out_bus.op_code.value
         self.AC = self.alu.out_bus
 
-    def latch_BR(self):
+    def latch_br(self):
         self.BR = self.alu.out_bus
 
-    def latch_DR(self):
+    def latch_dr(self):
         if self.DR_bus_selector:
             self.DR = self.mem_bus
         else:
             self.DR = self.alu.out_bus
         self.DR_bus_selector = False  # Переключаем шину снова на основную шину из АЛУ
 
-    def latch_CR(self):
+    def latch_cr(self):
         self.CR = self.alu.out_bus
 
-    def latch_SP(self):
+    def latch_sp(self):
         self.SP = self.alu.out_bus
 
-    def latch_IP(self):
+    def latch_ip(self):
         self.IP = self.alu.out_bus
 
-    def latch_AR(self):
-        if isinstance(self.alu.out_bus, Command): self.alu.out_bus = self.alu.out_bus.op_code.value
+    def latch_ar(self):
+        if isinstance(self.alu.out_bus, Command):
+            self.alu.out_bus = self.alu.out_bus.op_code.value
         self.AR = self.alu.out_bus
-        if self.AR > 1023: raise Exception("AR out of bounds")
+        if self.AR > 1023:
+            raise Exception("AR out of bounds")  # noqa: TRY002, TRY003
 
     def rd_mem(self, tick_call_back):
         self.mem_bus = self.address_decoder.get(self.AR, tick_call_back)
@@ -158,25 +169,25 @@ class ACCopm:
     def wr_mem(self, tick_call_back):
         self.address_decoder.set(self.AR, self.DR, tick_call_back)
 
-    def load_AC(self):
+    def load_ac(self):
         self.alu.left_bus = self.AC
 
-    def load_BR(self):
+    def load_br(self):
         self.alu.left_bus = self.BR
 
-    def load_DR(self):
+    def load_dr(self):
         self.alu.right_bus = self.DR
 
-    def load_CR(self):
+    def load_cr(self):
         self.alu.right_bus = self.CR
 
-    def load_SP(self):
+    def load_sp(self):
         self.alu.right_bus = self.SP
 
-    def load_IP(self):
+    def load_ip(self):
         self.alu.right_bus = self.IP
 
-    def CR_addr_to_bus(self):
+    def cr_addr_to_bus(self):
         self.alu.right_bus = self.CR.address
 
 
@@ -185,7 +196,7 @@ class ControlUnit:
     OPERAND_FETCH_INDEX = 18
     POST_EXECUTION_INDEX = 69
 
-    mIP: int = 0  # Micro memory IP
+    m_ip: int = 0  # Micro memory IP
     comp: ACCopm
     microcode_mem: list[MicroCommand]
     ticks_counter: int = 0
@@ -347,37 +358,37 @@ class ControlUnit:
             continue
 
     # Функция выполняет очередную команду, возращает True, если не было Hlt и False, если был (надо ли продолжать)
-    def process_mc(self):
+    def process_mc(self):  # noqa: C901
         self.tick_log()
-        mc = self.microcode_mem[self.mIP]
+        mc = self.microcode_mem[self.m_ip]
         if mc.is_control:
             if MicroInstruction.CHCK_ADDR_TYPE in mc.signals:
                 if isinstance(self.comp.CR, int):  # Если в CR попало числовое значение - пропускаем
-                    self.mIP = self.POST_EXECUTION_INDEX
+                    self.m_ip = self.POST_EXECUTION_INDEX
                     return True
                 addr_type = self.comp.CR.addressing_type
                 if addr_type == AddressingType.ABSOLUTE_STRAIGHT:
-                    self.mIP += 1
+                    self.m_ip += 1
                     return True
                 if addr_type == AddressingType.STRAIGHT_RELATIVE:
-                    self.mIP = 6
+                    self.m_ip = 6
                     return True
                 if addr_type == AddressingType.INDIRECT_STRAIGHT:
-                    self.mIP = 9
+                    self.m_ip = 9
                     return True
                 if addr_type == AddressingType.STACK_RELATIVE:
-                    self.mIP = 13
+                    self.m_ip = 13
                     return True
                 if addr_type == AddressingType.DIRECT_LOAD:
-                    self.mIP = 16
+                    self.m_ip = 16
                     return True
                 if addr_type == AddressingType.NO_ADDRESS:
-                    self.mIP = 18
+                    self.m_ip = 18
             if MicroInstruction.JUMP in mc.signals:
-                self.mIP = mc.value
+                self.m_ip = mc.value
                 return True
             if MicroInstruction.JUMP_TO_CR_OPCODE in mc.signals:
-                self.mIP = self.comp.CR.op_code.value
+                self.m_ip = self.comp.CR.op_code.value
                 return True
             if MicroInstruction.JUMP_IF in mc.signals:
                 check_res = False
@@ -389,25 +400,25 @@ class ControlUnit:
                     check_res = True
                 if MicroInstruction.CHECK_N in mc.signals and self.comp.alu.N == 1:
                     check_res = True
-                self.mIP = mc.value if check_res else self.mIP + 1
+                self.m_ip = mc.value if check_res else self.m_ip + 1
                 return True
             if MicroInstruction.HLT in mc.signals:
                 return False
         else:
             if MicroInstruction.LOAD_AC in mc.signals:
-                self.comp.load_AC()
+                self.comp.load_ac()
             if MicroInstruction.LOAD_BR in mc.signals:
-                self.comp.load_BR()
+                self.comp.load_br()
             if MicroInstruction.LOAD_DR in mc.signals:
-                self.comp.load_DR()
+                self.comp.load_dr()
             if MicroInstruction.LOAD_SP in mc.signals:
-                self.comp.load_SP()
+                self.comp.load_sp()
             if MicroInstruction.LOAD_CR in mc.signals:
-                self.comp.load_CR()
+                self.comp.load_cr()
             if MicroInstruction.LOAD_IP in mc.signals:
-                self.comp.load_IP()
+                self.comp.load_ip()
             if MicroInstruction.CR_ADDR_TO_BUS in mc.signals:
-                self.comp.CR_addr_to_bus()
+                self.comp.cr_addr_to_bus()
             if MicroInstruction.RD_MEM in mc.signals:
                 self.comp.rd_mem(self.tick_log)
 
@@ -422,32 +433,32 @@ class ControlUnit:
             if MicroInstruction.INC in mc.signals:
                 self.comp.alu.inc()
             if MicroInstruction.SET_NZ in mc.signals:
-                self.comp.alu.set_NZ()
+                self.comp.alu.set_nz()
             if MicroInstruction.LATCH_AC in mc.signals:
-                self.comp.latch_AC()
+                self.comp.latch_ac()
             if MicroInstruction.LATCH_BR in mc.signals:
-                self.comp.latch_BR()
+                self.comp.latch_br()
             if MicroInstruction.LATCH_DR in mc.signals:
-                self.comp.latch_DR()
+                self.comp.latch_dr()
             if MicroInstruction.LATCH_SP in mc.signals:
-                self.comp.latch_SP()
+                self.comp.latch_sp()
             if MicroInstruction.LATCH_CR in mc.signals:
-                self.comp.latch_CR()
+                self.comp.latch_cr()
             if MicroInstruction.LATCH_IP in mc.signals:
-                self.comp.latch_IP()
+                self.comp.latch_ip()
             if MicroInstruction.LATCH_AR in mc.signals:
                 try:
-                    self.comp.latch_AR()
+                    self.comp.latch_ar()
                 except Exception as e:
                     print(e)
                     return False
             if MicroInstruction.WR_MEM in mc.signals:
                 self.comp.wr_mem(self.tick_log)
-        self.mIP += 1
+        self.m_ip += 1
         return True
 
     def tick_log(self, info: str = ""):
-        log = (f"Tick #{self.ticks_counter}: {info} mIP: {self.mIP}; AC: {self.comp.AC}; BR: {self.comp.BR}; "
+        log = (f"Tick #{self.ticks_counter}: {info} mIP: {self.m_ip}; AC: {self.comp.AC}; BR: {self.comp.BR}; "
                f"DR: {self.comp.DR}; SP: {self.comp.SP}; CR: {self.comp.CR}; IP: {self.comp.IP}; "
                f"AR: {self.comp.AR}; N: {self.comp.alu.N}; Z: {self.comp.alu.Z}")
         logging.debug(log)
@@ -462,18 +473,18 @@ def check_start(mem: list[Command | int]):
     return 0
 
 
-def main(code, input_stream, output):
+def main(code_file_name, input_stream_file_name, output_file_name):
     logging.getLogger().setLevel(logging.DEBUG)
-    mem = json.load(open(code), object_hook=dictToCommand)
-    input_str = open(input_stream).read()  # Считываем файл в строку
-    input_len = re.findall(r"^\d+(?=[^\d])", input_str)[0]  # Парсим регуляркой длину входного потока
+    mem = json.load(open(code_file_name), object_hook=dict_to_command)
+    input_str = open(input_stream_file_name).read()  # Считываем файл в строку
+    input_len = re.findall(r"^\d+(?=\D)", input_str)[0]  # Парсим регуляркой длину входного потока
     input_str = input_str.replace(input_len, "", 1)  # Убираем длину вхожного потока из входной строки
-    input: list[int | str] = [int(input_len)] + list(input_str)  # Помещаем во входной буффер его длину + содержание
+    input_buffer: list[int | str] = [int(input_len)] + list(input_str)  # Помещаем во входной буффер его длину + содержание  # noqa: RUF005
     alu = ALU()
-    address_decoder = AddressDecoder(mem, input)
+    address_decoder = AddressDecoder(mem, input_buffer)
     comp = ACCopm(alu, address_decoder)
     comp.IP = check_start(mem)
-    with open(output, "w") as f:
+    with open(output_file_name, "w") as f:
         cu = ControlUnit(comp, f)
         cu.start()
     print("".join(address_decoder.output_buffer))
