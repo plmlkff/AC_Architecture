@@ -62,7 +62,7 @@ class ALU:
 
 class AddressDecoder:
     MEMORY_ACCESS_TIME: int = 10
-    CACHE_LINES_COUNT: int = 0
+    CACHE_LINES_COUNT: int = 6
     INPUT_MAPPED: int = 1023
     OUTPUT_MAPPED: int = 1022
     MEM_SIZE = 1024

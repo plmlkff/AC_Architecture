@@ -105,23 +105,23 @@ asm | acc | neum | mc -> hw | tick -> instr | struct | stream | mem | pstr | pro
 ```text
    Registers
 +------------------------------+
-| AC     IP     SP      DR    |
-| BR     AR     IP            |
+| AC     IP     SP      DR     |
+| BR     AR     IP             |
 +------------------------------+
 
   Instruction and data memory
 +------------------------------+
-| 00   : value                  |
-| 01   : value                  |
-| 02   : value                  |
-|     ...                       |
-| n    : program start          |
-|      : hlt                    |
-|     ...                       |
-| i    : function 0             |
-|     ...                       |
-| 1022 : output                 |
-| 1023 : input                  |
+| 00   : value                 |
+| 01   : value                 |
+| 02   : value                 |
+|     ...                      |
+| n    : program start         |
+|      : hlt                   |
+|     ...                      |
+| i    : function 0            |
+|     ...                      |
+| 1022 : output                |
+| 1023 : input                 |
 +------------------------------+
 ```
 ## ISA
@@ -256,13 +256,78 @@ E    -> to stderr
 + Инкремент счетчика микрокоманд (mIP)
 + Возврат значения: нужно ли продолжать симуляцию
 
+## Тестирование
++ Тестирование осуществляется при помощи golden test-ов.
++ Код golden тестирования находится в [файле](./golden_test.py)
++ Конфигурация golden test-ов находится в [директории](./golden)
++ Файлы с исходным кодом находятся в [директории](./examples)
+
+Конфигурация CI через GitHub Actions:
+```yaml
+name: Stack-Machine
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip3 install poetry
+          poetry install
+
+      - name: Run tests and collect coverage
+        run: |
+          poetry run coverage run -m pytest .
+          poetry run coverage report -m
+        env:
+          CI: true
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip3 install poetry
+          poetry install
+
+      - name: Check code formatting with Ruff
+        run: poetry run ruff format --check .
+
+      - name: Run Ruff linters
+        run: poetry run ruff check .
+ ```
+
 ## Кэш
 + Полностью ассоциативный
 + 4 кэш-линии
 + Политика вытеснения: случайная
 + Политика записи: write-through
 ![AddressDecoder.png](resources/AddressDecoder.png)
-+ 
 Показатели работы кэша на алгоритме `prob1`, сумма делителей от 1 до 999(доступ к памяти – 10 тактов, к кэшу – 1):
 
 | Кол-во линий | Кол-во тактов |
@@ -280,4 +345,12 @@ E    -> to stderr
 Из-за случайной политики вынесения из кэша, 
 количества тактов между увеличениями числа кэш-линий меняется не так существенно.
 
-Основной цикл программы состоит из 32 инструкций.
+Основной цикл программы состоит из 29 инструкций.
+
+Статистика с 6 линиями кэша, чтение из кэша - 1 такт, из памяти 10 - тактов.
+```
+| ФИО                         | алг   | LoC | такт.  | вариант                                                                                    |
+| Мальков Павел Александрович | hello | 24  | 2651   | asm | acc | neum | mc -> hw | tick -> instr | struct | stream | mem | pstr | prob1 | cache |
+| Мальков Павел Александрович | cat   | 16  | 883    | asm | acc | neum | mc -> hw | tick -> instr | struct | stream | mem | pstr | prob1 | cache |
+| Мальков Павел Александрович | prob1 | 36  | 177351 | asm | acc | neum | mc -> hw | tick -> instr | struct | stream | mem | pstr | prob1 | cache |
+```
