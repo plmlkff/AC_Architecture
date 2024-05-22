@@ -1,4 +1,7 @@
 # Лабораторная работа №3
+
+Мальков Павел P3210
+
 ## Вариант:
 asm | acc | neum | mc -> hw | tick -> instr | struct | stream | mem | pstr | prob1 | cache
 
