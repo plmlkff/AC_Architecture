@@ -1,6 +1,7 @@
 # Лабораторная работа №3
 ## Вариант:
 asm | acc | neum | mc -> hw | tick -> instr | struct | stream | mem | pstr | prob1 | cache
+
 Вариант с усложнением\
 Язык: Python
 ## Язык программирования ASM
