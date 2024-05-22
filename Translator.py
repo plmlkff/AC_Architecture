@@ -1,3 +1,4 @@
+import os
 import sys
 from dataclasses import dataclass
 from enum import Enum
@@ -148,10 +149,12 @@ def scan_lexemes(lines: str):
         current_state = lexeme.type
     return lexemes
 
+
 def remove_comments(lines: list[str]):
     for i in range(len(lines)):
         lines[i] = lines[i].split(' ; ')[0]
     return lines
+
 
 def read_file(input_name: str):
     f = open(input_name, "r")
@@ -160,12 +163,17 @@ def read_file(input_name: str):
     return data
 
 
-if __name__ == '__main__':
-    _, input_file_name, output_file_name = sys.argv
+def main(input_file_name, output_file_name):
     lines = read_file(input_file_name)
     lines = remove_comments(lines)
     lines = replace_marks_and_chars(lines)
     lexemes = scan_lexemes(''.join(lines))
     stack = lexemes_to_commands(lexemes)
     json.dump(stack, open(output_file_name, 'w'), cls=CommandEncoder)
-    print(output_file_name)
+    head, tail = os.path.split(output_file_name)
+    print(tail)
+
+
+if __name__ == '__main__':
+    _, input_file_name, output_file_name = sys.argv
+    main(input_file_name, output_file_name)

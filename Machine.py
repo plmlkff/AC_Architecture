@@ -1,6 +1,9 @@
 import json
+import logging
 import re
 import sys
+from io import TextIOWrapper
+
 from BasicTypes import Command, MicroCommand, MicroInstruction, AddressingType, dictToCommand, OpCode
 from random import randint
 
@@ -49,7 +52,7 @@ class ALU:
 
 class AddressDecoder:
     MEMORY_ACCESS_TIME: int = 10
-    CACHE_LINES_COUNT: int = 10
+    CACHE_LINES_COUNT: int = 0
     INPUT_MAPPED: int = 1023
     OUTPUT_MAPPED: int = 1022
     MEM_SIZE = 1024
@@ -184,8 +187,9 @@ class ControlUnit:
     comp: ACCopm
     microcode_mem: list[MicroCommand]
     ticks_counter: int = 0
+    f: TextIOWrapper
 
-    def __init__(self, comp: ACCopm):
+    def __init__(self, comp: ACCopm, f):
         self.comp = comp
         self.microcode_mem = [
             # Instruction fetch
@@ -334,6 +338,7 @@ class ControlUnit:
                                  MicroInstruction.INC, MicroInstruction.LATCH_IP]),  # 69: IP + 1 -> IP
             MicroCommand(True, [MicroInstruction.JUMP], self.INSTR_FETCH)  # 70: 0 -> mIP
         ]
+        self.f = f
 
     def start(self):
         while self.process_mc():
@@ -440,9 +445,11 @@ class ControlUnit:
         return True
 
     def tick_log(self, info: str = ''):
-        print(f'Tick #{self.ticks_counter}: {info} mIP: {self.mIP}; AC: {self.comp.AC}; BR: {self.comp.BR}; '
-              f'DR: {self.comp.DR}; SP: {self.comp.SP}; CR: {self.comp.CR}; IP: {self.comp.IP}; '
-              f'AR: {self.comp.AR}; N: {self.comp.alu.N}; Z: {self.comp.alu.Z}\n')
+        log = (f'Tick #{self.ticks_counter}: {info} mIP: {self.mIP}; AC: {self.comp.AC}; BR: {self.comp.BR}; '
+               f'DR: {self.comp.DR}; SP: {self.comp.SP}; CR: {self.comp.CR}; IP: {self.comp.IP}; '
+               f'AR: {self.comp.AR}; N: {self.comp.alu.N}; Z: {self.comp.alu.Z}')
+        logging.debug(log)
+        self.f.write(log+'\n')
         self.ticks_counter += 1
 
 
@@ -453,10 +460,10 @@ def check_start(mem: list[Command | int]):
     return 0
 
 
-if __name__ == "__main__":
-    args = sys.argv
-    mem = json.load(open(args[1], 'r'), object_hook=dictToCommand)
-    input_str = open(args[2], 'r').read()  # Считываем файл в строку
+def main(code, input_stream, output):
+    logging.getLogger().setLevel(logging.DEBUG)
+    mem = json.load(open(code, 'r'), object_hook=dictToCommand)
+    input_str = open(input_stream, 'r').read()  # Считываем файл в строку
     input_len = re.findall(r'^\d+(?=[^\d])', input_str)[0]  # Парсим регуляркой длину входного потока
     input_str = input_str.replace(input_len, '', 1)  # Убираем длину вхожного потока из входной строки
     input: list[int | str] = [int(input_len)] + list(input_str)  # Помещаем во входной буффер его длину + содержание
@@ -464,6 +471,13 @@ if __name__ == "__main__":
     address_decoder = AddressDecoder(mem, input)
     comp = ACCopm(alu, address_decoder)
     comp.IP = check_start(mem)
-    cu = ControlUnit(comp)
-    cu.start()
+    with open(output, 'w') as f:
+        cu = ControlUnit(comp, f)
+        cu.start()
     print(''.join(address_decoder.output_buffer))
+    print(f'Ticks count: {cu.ticks_counter-1}')
+
+
+if __name__ == "__main__":
+    _, code, input_stream, output = sys.argv
+    main(code, input_stream, output)
